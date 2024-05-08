@@ -17,6 +17,8 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
+#include "ImageTreatment_Charles.h"
+
 using namespace std;
 using namespace cv;
 
@@ -27,27 +29,45 @@ int working_test_openCV();
 
 
 int main(int args, char** argv) {
-
     // Change the value to execute the right function
-    std::string i = "0";
+    std::string i = "1";
     if(args>1) {
         i = argv[1];
     }
 
+    ImageTreatment_Charles img = ImageTreatment_Charles("HappyFish.jpg");
     if      (i=="1") {return main1();}
     else if (i=="2") {return main2();}
     else {return working_test_openCV();}
 }
 
 int main1() {
-    printf("hello world");
+    std::cout << "Hello world" << std::endl;
+
+    // create image
+    ImageTreatment_Charles img = ImageTreatment_Charles("../src/ressources/HappyFish.jpg");
+    if (!img.loadImage()) {return -1;}
+    std::cout << img.getImageName() << std::endl;
+
+    // treatment
+    img.erosion(10);
+    img.dilatation(10);
+    img.saveImage("../src/ressources/output.jpg");
+
+    // view windows
+    string winName("Display window");
+    Mat view;
+    namedWindow(winName, WINDOW_AUTOSIZE);
+    hconcat(img.getImageSource(), img.getImage(), view);
+    imshow(winName, view);
+    waitKey(0);
+
     return 0;
 }
 
 int main2() {
-    printf("hello you");
-    return 0;
-}
+    cout << "Mes tests" << endl;
+    return 0;}
 
 int working_test_openCV() {
     string winName("Display window");
