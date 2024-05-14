@@ -8,18 +8,17 @@
 
 class Image
 {
-	//std::string m_imagePath;
-	std::string m_imageName;
 	cv::Mat m_imageSource;
 
 public:
 
-	Image(const std::string& imageName, const std::string& imagePath);
-	Image(const std::string& imageName, cv::Mat& imageMat);
+	Image(const std::string& imagePath);
+	Image(cv::Mat& imageMat);
 	
 	Image Resize(double scalingFactor);
 	Image Crop(int startRow, int endRow, int startCol, int endCol);
 	Image Rotate(double rotationAngle);
+	Image CannyEdge(float blurredValue, int lowThreshold, int highThreshold);
 
 	void Display();
 

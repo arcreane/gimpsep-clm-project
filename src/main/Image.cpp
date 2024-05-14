@@ -1,15 +1,12 @@
 #include "Image.h"
 #include <filesystem> 
 
-namespace fs = std::filesystem;
 using namespace std;
 using namespace cv;
 
 // Define the constructors
-Image::Image(const string& imageName, const string& imagePath)
+Image::Image(const string& imagePath)
 {
-	//m_imagePath = imagePath;
-	m_imageName = imageName;
 	m_imageSource = imread(imagePath, IMREAD_COLOR);
 	if (m_imageSource.empty()) {
     	cout << "Could not open or find the image" << endl;
@@ -17,9 +14,8 @@ Image::Image(const string& imageName, const string& imagePath)
     }
 }
 
-Image::Image(const string& imageName, Mat& imageMat)
+Image::Image(Mat& imageMat)
 {
-	m_imageName = imageName;
 	m_imageSource = imageMat;
 }
 
@@ -29,7 +25,7 @@ Image Image::Resize(double scalingFactor)
 	Mat tmp;
 	if(scalingFactor!=0)
 		resize(m_imageSource, tmp, Size(round(scalingFactor*m_imageSource.cols),round(scalingFactor*m_imageSource.rows)), scalingFactor, scalingFactor, INTER_LINEAR);
-	return Image(m_imageName, tmp);
+	return Image(tmp);
 }
 
 
@@ -44,7 +40,7 @@ Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
 	if (startCol < 0)
 		startCol = 0;
 	Mat tmp = m_imageSource(Range(startRow, endRow), Range(startCol, endCol));
-	return Image(m_imageName, tmp);
+	return Image(tmp);
 }
 
 Image Image::Rotate(double rotationAngle)
@@ -53,9 +49,16 @@ Image Image::Rotate(double rotationAngle)
 	Point2f center(m_imageSource.cols/2, m_imageSource.rows/2);
 	Mat RotationMatrix = getRotationMatrix2D(center, rotationAngle, 1);
 	warpAffine(m_imageSource, tmp, RotationMatrix, m_imageSource.size());
-	return Image(m_imageName, tmp);
+	return Image(tmp);
 }
 
+Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
+{
+    Mat imageEdges, blurredImage;
+ 	GaussianBlur(m_imageSource, blurredImage,Size(5, 5), blurredValue); 
+    Canny(blurredImage, imageEdges,lowThreshold,highThreshold);
+    return Image(imageEdges);
+}
 
 void Image::Display()
 {
