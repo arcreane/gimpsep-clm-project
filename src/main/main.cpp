@@ -16,6 +16,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
+#include "ImageTreatment_Maxime.h"
 
 using namespace std;
 using namespace cv;
@@ -24,6 +25,8 @@ using namespace cv;
 int main1();
 int main2();
 int working_test_openCV();
+int brightness();
+
 
 
 int main(int args, char** argv) {
@@ -35,17 +38,11 @@ int main(int args, char** argv) {
     }
 
     if      (i=="1") {return main1();}
-    else if (i=="2") {return main2();}
-    else {return working_test_openCV();}
+    else {return brightness();}
 }
 
 int main1() {
     printf("hello world");
-    return 0;
-}
-
-int main2() {
-    printf("hello you");
     return 0;
 }
 
@@ -58,6 +55,20 @@ int working_test_openCV() {
     namedWindow(winName, WINDOW_AUTOSIZE);
     imshow(winName, image);
     waitKey(0);
+    return 0;
+}
+
+int brightness() {
+    try {
+        ImageTreatment_Maxime image("../src/ressources/HappyFish.jpg");
+        // Régler la luminosité avec curseur
+        image.Brightness();
+        // Afficher le résultat final
+        image.Display();
+    } catch (const std::exception& e) {
+        std::cerr << "Erreur : " << e.what() << std::endl;
+        return 1;
+    }
     return 0;
 }
 
