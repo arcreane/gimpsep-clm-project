@@ -1203,7 +1203,7 @@ namespace internal
 	static cv::String gCurrentContext;
 	static std::map<cv::String, cvui_context_t> gContexts; // indexed by the window name.
 	static char gBuffer[1024];
-	static int gLastKeyPressed; // TODO: collect it per window
+	static int gLastKeyPressed;
 	static int gDelayWaitKey;
 	static cvui_block_t gScreen;
 
@@ -1227,7 +1227,7 @@ namespace internal
 		{}
 	};
 
-	static cvui_block_t gStack[100]; // TODO: make it dynamic?
+	static cvui_block_t gStack[100];
 	static int gStackCount = -1;
 	static const int gTrackbarMarginX = 14;
 
@@ -1719,7 +1719,6 @@ namespace internal
 
 		//Handle keyboard shortcuts
 		if (internal::gLastKeyPressed != -1) {
-			// TODO: replace with something like strpos(). I think it has better performance.
 			auto aLabel = internal::createLabel(theLabel);
 			if (aLabel.hasShortcut && (tolower(aLabel.shortcut) == tolower((char)internal::gLastKeyPressed))) {
 				aWasShortcutPressed = true;
@@ -1762,7 +1761,6 @@ namespace internal
 	void image(cvui_block_t& theBlock, int theX, int theY, cv::Mat& theImage) {
 		cv::Rect aRect(theX, theY, theImage.cols, theImage.rows);
 
-		// TODO: check for render outside the frame area
 		render::image(theBlock, aRect, theImage);
 
 		// Update the layout flow according to image size
@@ -2076,7 +2074,6 @@ namespace render
 		bool aDiscrete = internal::bitsetHas(theParams.options, cvui::TRACKBAR_DISCRETE);
 		long double aFixedStep = aDiscrete ? theParams.step : (theParams.max - theParams.min) / 20;
 
-		// TODO: check min, max and step to prevent infinite loop.
 		for (long double aValue = theParams.min; aValue <= theParams.max; aValue += aFixedStep) {
 			int aPixelX = internal::trackbarValueToXPixel(theParams, theShape, aValue);
 			cv::Point aPoint1(aPixelX, aBarTopLeft.y);
@@ -2114,7 +2111,6 @@ namespace render
 
 		//Draw large steps and labels
 		bool aHasSegmentLabels = internal::bitsetHas(theParams.options, TRACKBAR_HIDE_SEGMENT_LABELS) == false;
-		// TODO: check min, max and step to prevent infinite loop.
 		for (long double aValue = theParams.min; aValue <= theParams.max; aValue += aSegmentLength) {
 			trackbarSegmentLabel(theBlock, theShape, theParams, aValue, theWorkingArea, aHasSegmentLabels);
 		}

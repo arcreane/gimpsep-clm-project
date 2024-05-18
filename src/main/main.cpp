@@ -127,7 +127,7 @@ int working_test_openCV() {
 
 #define WINDOW_NAME "CVUI Hello World!"
 
-int test_app() {
+int test_app() {  // TODO: option
     cv::Mat image = cv::imread("../src/ressources/HappyFish.jpg");
     if (image.empty()) {std::cout << "ERROR : can't open image" << std::endl;return -1;}
 
