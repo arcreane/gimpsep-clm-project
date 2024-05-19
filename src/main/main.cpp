@@ -19,9 +19,11 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
-
-#include "ImageTreatment_Charles.h"
+#define CVUI_IMPLEMENTATION
 #include "../lib/cvui.h"
+
+#include "ImageApp.h"
+#include "ImageTreatment_Charles.h"
 
 
 using namespace std;
@@ -103,6 +105,7 @@ int main3() {
     return 0;
 }
 
+
 int working_test_openCV() {
     string winName("Display window");
     string imageName("../src/ressources/HappyFish.jpg");
@@ -118,22 +121,111 @@ int working_test_openCV() {
 
 // https://github.com/Dovyski/cvui
 // https://fernandobevilacqua.com/cvui/components/image/
-#include <opencv2/opencv.hpp>
+#define WINDOW_NAME "CVUI Hello World!"
+enum {DILATATION_ERROSION, RESIZING, STITCHING_PANORAMA, CANNY_DETECTION, PIVOT};
+cv::Mat imageSource, imageTemp, image;
+
+
+/* Dans ImageApp mettre en place une method updateImage() qui sera utilisé dans tous les panel buttons
+ * Cette fonction prend l'image source et lui applique l'ensemble des méthodes de traitement d'image
+ * avec if (valueMethod != default value) pour n'appliquer reelement que les fonctions demandé par l'user
+ * Problem : chaque fonction doit avoir un ordre precis ce qui peut avoir des effets non voulu
+ * (ex: dilatation avant erosion ou erosion avant dilatation ?)
+ * */
+/*
+ * Solution suivante : avoir Mat imageSource, imageTemp, imageView
+ * imageSource est l'image à l'import
+ * imageView est l'image que l'on affiche sur l'ecran
+ * imageTemp est une save de l'image modifié à chaque fois qu'on change de panel
+ * On aura un bouton reset all pour mettre  imageView = imageSource
+ * et un bouton reset au niveau du panel pour annuler les modifs en cours
+ *
+ * Pour mettre en place le ctrl+Z, on instancie une liste de Mat
+ * Le premier ctrl+Z annuler les modifs en cours et les suivants récupères l'etat initial au precedant panel
+ * Qui dit ctrl+Z dit aussi ctrl+Y pour annuler les retours arrières
+
+ */
+
+
+void dilatationErrosionPanel(cv::Mat& frame, double& valueDilatation, double& valueErosion) {
+    cvui::window(frame, 0, 200, 300, 200, "Actions");
+    cvui::beginColumn(frame, 0, 220, 300, 200, 10);
+    cvui::text("dilatation / erosion panel");
+    cvui::space(5);
+    if (cvui::trackbar(300, &valueDilatation, (double)1.0, (double)100.0)) {
+        cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(valueDilatation, valueDilatation), cv::Point(-1, -1));
+        cv::dilate(imageTemp, image,element, cv::Point(-1, -1), 1);
+    }
+    if (cvui::trackbar(300, &valueErosion, (double)1.0, (double)100.0)) {
+        cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(valueErosion, valueErosion), cv::Point(-1, -1));
+        cv::erode(imageTemp, image,element, cv::Point(-1, -1), 1);
+    }
+
+    if (cvui::button("Default dilate")) {valueDilatation = 1;}
+    if (cvui::button("Default erode")) {valueErosion = 1;}
+    if (cvui::button("Default")) {
+        valueDilatation = 1;
+        valueErosion = 1;
+        image = imageTemp.clone();
+    }
+
+    cvui::endColumn();
+}
+
+void resizingPanel(cv::Mat& frame) {
+    cvui::window(frame, 0, 200, 300, 200, "Actions");
+    cvui::beginColumn(frame, 0, 220, 300, 200, 10);
+    cvui::text("resizing");
+    cvui::endColumn();
+}
+
+void cannyPanel(cv::Mat& frame, bool& isCanny, double& blurredValue, double& lowThreshold, double& highThreshold) {
+    cvui::window(frame, 0, 200, 300, 300, "Actions");
+    cvui::beginColumn(frame, 0, 220, 300, 300, 10);
+    cvui::text("pivot panel");
+    cvui::space(5);
+    if (cvui::trackbar(300, &blurredValue, (double)0.0, (double)10.0)) {}
+    cvui::trackbar(300, &lowThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
+    cvui::trackbar(300, &highThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
+    cvui::endColumn();
+}
+
+void pivotPanel(cv::Mat& frame, double& rotationAngle) {
+    cvui::window(frame, 0, 200, 300, 200, "Actions");
+    cvui::beginColumn(frame, 0, 220, 300, 200, 10);
+    cvui::text("pivot panel");
+    cvui::space(5);
+    if (cvui::trackbar(300, &rotationAngle, (double)-180, (double)180)) {
+        // action sur image
+        Point2f center(imageTemp.cols/2, imageTemp.rows/2);
+        Mat RotationMatrix = getRotationMatrix2D(center, rotationAngle, 1);
+        warpAffine(imageTemp, image, RotationMatrix, imageTemp.size());
+    }
+    cvui::endColumn();
+}
+
+
+
+
 
 // One (and only one) of your C++ files must define CVUI_IMPLEMENTATION
 // before the inclusion of cvui.h to ensure its implementaiton is compiled.
-#define CVUI_IMPLEMENTATION
-#include "../lib/cvui.h"
 
-#define WINDOW_NAME "CVUI Hello World!"
+#include <cstdlib>
 
 int test_app() {  // TODO: option
-    cv::Mat image = cv::imread("../src/ressources/HappyFish.jpg");
-    if (image.empty()) {std::cout << "ERROR : can't open image" << std::endl;return -1;}
+    imageSource = cv::imread("../src/ressources/HappyFish.jpg");
+    image = imageSource.clone();
+    imageTemp = imageSource.clone();
 
-    double value = 0;
+    if (imageSource.empty()) {std::cout << "ERROR : can't open image" << std::endl;return -1;}
 
-    cv::Mat frame = cv::Mat(440, 900, CV_8UC3);
+    double valueDilatation =0; double valueErosion = 0;
+    double valuePivot = 0;
+    bool valueCanny = false; double blurredValue=0; double lowThreshold=0; double highThreshold=0;
+    int optionImage = 0;
+
+    cv::Mat frame = cv::Mat(520, 900, CV_8UC3);
     cvui::init(WINDOW_NAME);
     while (true) {
         frame = cv::Scalar(49, 52, 49);
@@ -145,22 +237,26 @@ int test_app() {  // TODO: option
         cvui::window(frame, 0, 0, 300, 200, "Options");
         // faire une loop sur une liste contrnant les buttonName pour avoir une matrice
         cvui::beginColumn(frame, 0, 20, 300, 200);
-        cvui::button("dilatation / erosion");
-        cvui::button("resizing");
-        cvui::button("panorama / stitching");
-        cvui::button("Canny edge detection");
+        if (cvui::button("dilatation / erosion")) {optionImage=DILATATION_ERROSION;}
+        if (cvui::button("resizing")) {optionImage=RESIZING;}
+        if (cvui::button("panorama / stitching")) {optionImage=STITCHING_PANORAMA;}
+        if (cvui::button("Canny edge detection")) {optionImage=CANNY_DETECTION;}
+        if (cvui::button("Pivot")) {optionImage=PIVOT;}
         cvui::endColumn();
+
         // mettre un switch case pour chaque button de la liste precedante
-        cvui::window(frame, 0, 200, 300, 200, "Actions");
-        cvui::beginColumn(frame, 0, 220, 300, 200, 10);
-        cvui::text("dilatation / erosion panel");
-        cvui::space(5);
-        cvui::trackbar(300, &value, (double)10.0, (double)15.0);
-        cvui::endColumn();
+
+        switch (optionImage) {
+            case DILATATION_ERROSION: dilatationErrosionPanel(frame, valueDilatation, valueErosion); break;
+            case RESIZING: resizingPanel(frame); break;
+            case CANNY_DETECTION: cannyPanel(frame, valueCanny, blurredValue, lowThreshold, highThreshold); break;
+            case PIVOT: pivotPanel(frame, valuePivot); break;
+        }
+
 
         // resize image pour que sa taille soit fixe sur l'ecran si taille trop grande
         // centrer image
-        cvui::window(frame, 300, 0, 300, 400, "Image");
+       // cvui::window(frame, 300, 0, 300, 400, "Image");
         cvui::image(frame, 325, 100, image);
 
         // cv::Mat, x, y, width, height, padding
@@ -168,13 +264,14 @@ int test_app() {  // TODO: option
         cvui::beginColumn(frame, 600, 20, 300, 400);
         cvui::space(5);
         cvui::button("save image");
-        cvui::button("change image");
+        if (cvui::button("change image")) {
+            system("explorer");
+        }
         cvui::endColumn();
 
         // bottom
-        cvui::window(frame, 0, 400, 900, 40, "");
-        cvui::beginRow(frame, 0, 420);
-        cvui::printf(0.5, 0x00ff00, "cursor: x = %d y = %d", cursor.x, cursor.y);
+        cvui::beginRow(frame, 0, 500);
+        cvui::printf(0.4, 0x00ff00, "cursor: x = %d y = %d", cursor.x, cursor.y);
         cvui::endRow();
 
 
@@ -192,7 +289,7 @@ int test_app() {  // TODO: option
 int test_cvui() {
     // Create a frame where components will be rendered to.
     cv::Mat frame = cv::Mat(900, 800, CV_8UC3);
-    cv::Mat image = cv::imread("../src/ressources/HappyFish.jpg");
+    image = cv::imread("../src/ressources/HappyFish.jpg");
     if (image.empty()) {std::cout << "ERROR : can't open image" << std::endl;return -1;}
 
     // Init cvui and tell it to create a OpenCV window, i.e. cv::namedWindow(WINDOW_NAME).
