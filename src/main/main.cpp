@@ -3,7 +3,7 @@
 
 int main()
 {
-	std::string imagePath = "../../src/ressources/HappyFish.jpg";
+	std::string imagePath = "../src/ressources/HappyFish.jpg";
 	Image myImage(imagePath);
 	
 	Image scaledImage = myImage.Resize(2);
