@@ -19,7 +19,11 @@ Image::Image(Mat& imageMat)
 	m_imageSource = imageMat;
 }
 
-
+/**
+ * Resizing
+ * plays on the size of the image
+ * scalingFactor = float from 0(inexistant) to 5(5 times normal size) with 1 being the usual image size
+ **/ 
 Image Image::Resize(double scalingFactor)
 {
 	Mat tmp;
@@ -28,7 +32,14 @@ Image Image::Resize(double scalingFactor)
 	return Image(tmp);
 }
 
-
+/**
+ * Croping
+ * cuts the image in a smaller rectangle form
+ * startRow = int vertical min value 
+ * endRow = int vertical max value
+ * startCol = int horizontal min value
+ * endCol = int horizontal max value
+ **/ 
 Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
 {
 	if (endRow > m_imageSource.rows || endRow < startRow)
@@ -43,6 +54,23 @@ Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
 	return Image(tmp);
 }
 
+
+int Image::cols()
+{
+	return m_imageSource.cols;
+}
+
+int Image::rows()
+{
+	return m_imageSource.rows;
+}
+
+/**
+ * Rotating
+ * Rotates the image around a center point
+ * rotationAngle = btw 0 and 360
+ * centerPoints = vector of two int
+ **/ 
 Image Image::Rotate(double rotationAngle, std::vector<int> centerPoints)
 {
 	Mat tmp;
@@ -52,6 +80,13 @@ Image Image::Rotate(double rotationAngle, std::vector<int> centerPoints)
 	return Image(tmp);
 }
 
+/**
+ * Drawing Edges
+ * Draws the apparent edges of the image
+ * blurredValue = float btw 0 and 1
+ * lowThreshold = int btw 0 and 255
+ * highThreshold = int btw 0 and 255
+ **/ 
 Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
 {
     Mat imageEdges, blurredImage;

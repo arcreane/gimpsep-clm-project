@@ -15,6 +15,8 @@ public:
 	Image(const std::string& imagePath);
 	Image(cv::Mat& imageMat);
 	
+	int cols();
+	int rows();
 	Image Resize(double scalingFactor);
 	Image Crop(int startRow, int endRow, int startCol, int endCol);
 	Image Rotate(double rotationAngle, std::vector<int> centerPoints);

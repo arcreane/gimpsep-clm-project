@@ -24,12 +24,12 @@ public:
 	Image(cv::Mat& imageMat);
 	
 	Image Brightness(int brightnessFactor);
-	Image Rotate(double rotationAngle);
+	Image Rotate(double rotationAngle, std::vector<int> centerPoints);
 	Image Resize(double scalingFactor);
 	Image Crop(int startRow, int endRow, int startCol, int endCol);
 	Image CannyEdge(float blurredValue, int lowThreshold, int highThreshold);
-    Image dilatation(int size);
-    Image erosion(int size);
+    Image dilatation(int SEsize);
+    Image erosion(int SEsize);
 
 	void Display();
 

@@ -69,21 +69,26 @@ Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
 
 /**
  * Rotating
- * Rotates the image and replaces 
- * startRow = int vertical min value 
- * endRow = int vertical max value
- * startCol = int horizontal min value
- * endCol = int horizontal max value
+ * Rotates the image around a center point
+ * rotationAngle = btw 0 and 360
+ * centerPoints = vector of two int
  **/ 
-Image Image::Rotate(double rotationAngle)
+Image Image::Rotate(double rotationAngle, std::vector<int> centerPoints)
 {
 	Mat tmp;
-	Point2f center(m_imageSource.cols/2, m_imageSource.rows/2);
+	Point2f center(centerPoints.at(0), centerPoints.at(1));
 	Mat RotationMatrix = getRotationMatrix2D(center, rotationAngle, 1);
 	warpAffine(m_imageSource, tmp, RotationMatrix, m_imageSource.size());
 	return Image(tmp);
 }
 
+/**
+ * Drawing Edges
+ * Draws the apparent edges of the image
+ * blurredValue = float btw 0 and 1
+ * lowThreshold = int btw 0 and 255
+ * highThreshold = int btw 0 and 255
+ **/ 
 Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
 {
     Mat imageEdges, blurredImage;
@@ -91,6 +96,20 @@ Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
     Canny(blurredImage, imageEdges,lowThreshold,highThreshold);
     return Image(imageEdges);
 }
+
+Image Image::Dilatation(int SEsize)
+{
+
+}
+
+
+Image Image::Erosion(int SEsize)
+{
+
+}
+
+
+
 
 void Image::Display()
 {
