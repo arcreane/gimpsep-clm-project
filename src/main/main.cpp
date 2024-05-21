@@ -17,6 +17,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include "ImageTreatment_Maxime.h"
+#include "../lib/tinyfiledialogs.h"
 
 using namespace std;
 using namespace cv;
@@ -26,6 +27,7 @@ int main1();
 int main2();
 int working_test_openCV();
 int brightness();
+int test();
 
 
 
@@ -38,7 +40,7 @@ int main(int args, char** argv) {
     }
 
     if      (i=="1") {return main1();}
-    else {return brightness();}
+    else {return test();}
 }
 
 int main1() {
@@ -72,3 +74,18 @@ int brightness() {
     return 0;
 }
 
+int test() {
+    char const * lFilterPatterns[4] = {  "*.jpg", "*.png", "*.jpeg", "*.jpe" };
+    char const * selection = tinyfd_openFileDialog( // there is also a wchar_t version
+            "Select file", // title
+            "C:\\", // optional initial directory
+            2, // number of filter patterns
+            lFilterPatterns, // char const * lFilterPatterns[2] = { "*.txt", "*.jpg" };
+            NULL, // optional filter description
+            0 // forbid multiple selections
+    );
+
+    cout << selection << endl;
+    return 1;
+
+}

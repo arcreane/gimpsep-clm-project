@@ -3,7 +3,7 @@
 //
 
 #include "ImageTreatment_Maxime.h"
-#include <opencv2\opencv.hpp>
+#include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 
 using namespace cv;
@@ -22,7 +22,7 @@ ImageTreatment_Maxime::ImageTreatment_Maxime(const std::string& path) : imagePat
 void on_bright(int pos, void* userdata) {
     // pointeur récupérant l'objet ImageTreatment_Maxime, pour modification en direct
     ImageTreatment_Maxime* img_treatment = reinterpret_cast<ImageTreatment_Maxime*>(userdata);
-    double brightness = pos - 250; // brightness varie entre -250 et 250
+    double brightness = pos - 250; // brightness varie entre -250 et 250 (valeur arbitraire permettant un choix assez large)
 
     img_treatment->imageSource.convertTo(img_treatment->image, -1, 1, brightness);
     imshow("Brightness Control", img_treatment->image);
@@ -42,3 +42,5 @@ void ImageTreatment_Maxime::Display() {
     waitKey(0);
 
 }
+
+
