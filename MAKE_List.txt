@@ -3,6 +3,49 @@ src/main/main.cpp
 
 LINUX :
 
+CC = g++
+CFLAGS = -Wall -std=c++17
+
+SRCDIR = src
+BINDIR = bin
+OBJDIR = obj
+LIBDIR = $(SRCDIR)/lib  # Directory containing the cvui.h file
+
+OPENCV_INCLUDE = -I/usr/include/opencv4
+OPENCV_LIBS = -L/usr/lib/x86_64-linux-gnu -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_videoio -lopencv_stitching
+CUSTOM_LIB_INCLUDE = -I$(LIBDIR)  # Include directory for cvui.h
+
+SRCS = $(wildcard $(SRCDIR)/*.cpp) $(wildcard $(SRCDIR)/main/*.cpp)
+OBJS = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))
+
+TARGET = $(BINDIR)/main
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	@mkdir -p $(BINDIR)
+	$(CC) -o $@ $^ $(OPENCV_LIBS)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@ $(OPENCV_INCLUDE) $(CUSTOM_LIB_INCLUDE)
+
+clean:
+	@rm -rf $(OBJDIR) $(BINDIR)
+
+# Automatic dependency generation
+-include $(OBJS:.o=.d)
+
+$(OBJDIR)/%.d: $(SRCDIR)/%.cpp
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) $(OPENCV_INCLUDE) $(CUSTOM_LIB_INCLUDE) -MM $< > $@.tmp
+	@sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.tmp > $@
+	@rm -f $@.tmp
+	
+	
+	
 
 CLION :
 
