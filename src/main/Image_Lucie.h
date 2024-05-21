@@ -17,7 +17,7 @@ public:
 	
 	Image Resize(double scalingFactor);
 	Image Crop(int startRow, int endRow, int startCol, int endCol);
-	Image Rotate(double rotationAngle);
+	Image Rotate(double rotationAngle, std::vector<int> centerPoints);
 	Image CannyEdge(float blurredValue, int lowThreshold, int highThreshold);
 
 	void Display();

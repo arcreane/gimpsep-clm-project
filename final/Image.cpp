@@ -20,6 +20,37 @@ Image::Image(Mat& imageMat)
 }
 
 
+
+
+void on_bright(int pos, void* userdata) {
+    // pointeur récupérant l'objet Image, pour modification en direct
+    Image* img_treatment = reinterpret_cast<Image*>(userdata);
+    double brightness = pos - 250; // brightness varie entre -250 et 250
+
+    img_treatment->imageSource.convertTo(img_treatment->image, -1, 1, brightness);
+    imshow("Brightness Control", img_treatment->image);
+}
+
+/**
+ * 
+**/
+Image Image::Brightness() {
+    namedWindow("Brightness Control", WINDOW_AUTOSIZE);
+    int trackbarValue = 250; // Valeur initiale de la trackbar
+    createTrackbar("Brightness", "Brightness Control", &trackbarValue, 500, on_bright, this);
+    waitKey(0);
+    destroyAllWindows();
+    return 
+
+}
+
+
+
+
+
+
+
+
 Image Image::Resize(double scalingFactor)
 {
 	Mat tmp;
