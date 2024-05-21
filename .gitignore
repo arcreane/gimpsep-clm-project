@@ -7,6 +7,6 @@
 # Visual Studio
 
 # Linux
-obj/
+obj/main
 bin/
 
