@@ -25,7 +25,7 @@
 #include "../lib/cvui.h"
 
 #include "ImageApp.h"
-#include "ImageTreatment_Charles.h"
+
 
 using namespace std;
 using namespace cv;

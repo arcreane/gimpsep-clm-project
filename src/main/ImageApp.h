@@ -12,8 +12,6 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
-// https://github.com/Dovyski/cvui
-// https://fernandobevilacqua.com/cvui/components/image/
 
 #define WINDOW_NAME "CVUI IMAGE TREATEMENT ISEP"
 enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE, PANORAMA};

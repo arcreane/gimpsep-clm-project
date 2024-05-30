@@ -4,9 +4,9 @@
 
 #include "ImageApp.h"
 
-
-
-#include "../lib/cvui.h"
+// https://github.com/Dovyski/cvui
+// https://fernandobevilacqua.com/cvui/components/image/
+#include "../lib/cvui.h" // Cannot be put in the header file
 
 
 
