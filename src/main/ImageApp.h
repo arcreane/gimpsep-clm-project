@@ -14,7 +14,9 @@
 
 
 #define WINDOW_NAME "CVUI IMAGE TREATEMENT ISEP"
-enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE, PANORAMA};
+enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE, PANORAMA}; // options
+enum {IDLE, OVER, DOWN}; // imageStates
+enum {SAVE, NEW, RESET}; // imageParameters
 
 
 class ImageApp {
@@ -22,41 +24,62 @@ class ImageApp {
 private:
     std::string iconFolder = "../src/ressources/icon/";
     cv::Mat frame = cv::Mat(520, 900, CV_8UC3); // windows size here
-    int option = BRIGHTNESS;
 
-    // For checkpoint image saving
+    /* **** For checkpoint image saving **** */
     std::string imagePathName;
+    std::string imageOutputPath = "../src/ressources/output.png";
     cv::Mat imageSource, imageSave, imageView;
 
-    // trackbar values
+    /* **** Block Variables **** */
+    int option = BRIGHTNESS;
+    // Button & grid parameters & info-bulles list
+    int buttonWidth = 40;
+    int buttonHeight = 40;
+    int buttonsPerRow = 6;
+    // Icon import
+    std::vector<std::string> messagesBlock = {"Brightness", "Rotate", "Resize", "Crop", "Dilatation", "Erosion", "Canny edge", "Panorama"};
+    std::vector<std::string> iconNameFileBlock = {"brightness", "rotate", "scissors", "crop", "dilatation", "erosion", "cannyEdge", "panorama"};
+    std::vector<std::vector<cv::Mat>> iconListBlock;
+
+    /* **** Parameters Variables **** */
+    std::vector<std::string> messagesParameters = {"Save image", "New image", "Reset modifications"};
+    std::vector<std::string> iconNameFileParameters = {"save", "new", "reset"};
+    std::vector<std::vector<cv::Mat>> iconListParameters;
+
+    /* **** Trackbar Panel Values **** */
     double valueDilatation =0;
     double valueErosion = 0;
     double valuePivot = 0;
     double blurredValue=0; double lowThreshold=0; double highThreshold=0;
 
+    // to remove after import Image class
+    double count = 0; bool checked;
+
+    // add parameters pour resize facilement la window
 
 public:
-    // constructor
+    // constructors
     explicit ImageApp();
     bool openStarterImage(const std::string& imagePathName);
 
-    // getter
+    // getters
     cv::Mat& getFrame();
     cv::Mat getImageSource();
     cv::Mat getImageSave();
     cv::Mat getImageView();
 
-    // setter
+    // setters
     void setOption(int newOption);
+    void applyParameter(int parameter);
 
-    // Block
+    // Blocks
     void topLeftBlock();
     void bottomLeftBlock();
     void centerBlock();
     void topRightBlock();
     void bottomBlock(cv::Point cursor);
 
-    // Panel
+    // Panels
     void brightnessPanel();
     void rotatePanel();
     void resizePanel();
@@ -65,6 +88,12 @@ public:
     void erosionPanel();
     void cannyEdgePanel();
     void panoramaPanel();
+
+    // Parameters
+    void saveImage();
+    void newImage();
+    void resetImage();
+    void defaultValueBlock(double& trackbarVariable);
 };
 
 

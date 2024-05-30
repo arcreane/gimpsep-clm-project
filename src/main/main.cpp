@@ -23,13 +23,13 @@
 // before the inclusion of cvui.h to ensure its implementaiton is compiled.
 #define CVUI_IMPLEMENTATION
 #include "../lib/cvui.h"
+#include "../lib/EnhancedWindow.h" // exemple : https://github.com/Dovyski/cvui/blob/master/example/src/ui-enhanced-window-component/main.cpp
 
 #include "ImageApp.h"
 
 
 using namespace std;
 using namespace cv;
-
 
 int run_application(const std::string& imagePathName);
 
@@ -84,14 +84,7 @@ int run_application(const std::string& imagePathName) {
 }
 
 
-/* idées de plugin
-cvui::text(frame, 110, 230, "cvui is awesome!");
-cvui::image(frame, 10, 10, image);
-cvui::checkbox(frame, 110, 300, "Checkbox label", &checked);
-cvui::printf(frame, 110, 320, 0.8, 0x00ff00, "value = %.2f", value);
-cvui::counter(frame, 110, 350, &count);
-cvui::window(frame, 110, 420, 130, 90, "Title");
-cvui::rect(frame, 280, 250, 70, 90, 0xff0000, 0x00ff00);
-cvui::sparkline(frame, values, 10, 500, 300, 100);
-*/
+
+
+
 

@@ -34,4 +34,17 @@ https://www.flaticon.com/free-icon/panorama_553567
 https://www.flaticon.com/free-icon/panorama_553583
 https://www.flaticon.com/free-icon/gallery_1375157
 
+SAVE
+https://www.flaticon.com/free-icon/diskette_489748
+https://www.flaticon.com/free-icon/diskette_489789
+https://www.flaticon.com/free-icon/load_2997923
 
+RESET
+https://www.flaticon.com/free-icon/reset_5578810
+https://www.flaticon.com/free-icon/update_88016
+https://www.flaticon.com/free-icon/gear_6736606
+
+NEW
+https://www.flaticon.com/free-icon/new_4131597
+https://www.flaticon.com/free-icon/new_4131900
+https://www.flaticon.com/free-icon/new-window_2704814

@@ -11,9 +11,38 @@
 
 
 /* ************************************************* */
-/* Constructor */
+/* Constructors */
 /* ************************************************* */
-ImageApp::ImageApp() = default;
+ImageApp::ImageApp() {
+    // Load icon Block images
+    for (const auto& iconName : this->iconNameFileBlock) {
+        cv::Mat icon_idle = cv::imread(this->iconFolder + iconName + "-idle.png");
+        cv::Mat icon_over = cv::imread(this->iconFolder + iconName + "-over.png");
+        cv::Mat icon_down = cv::imread(this->iconFolder + iconName + "-down.png");
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // faire mon traitement python d'image si l'image existe !!!!!!!!!!!!!!!!!!
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // If cannot open image then black image
+        if (icon_idle.empty()) {icon_idle = cv::Mat::ones(cv::Size(40, 40), CV_8UC3); icon_idle.setTo(cv::Scalar(82, 82, 82));}
+        if (icon_over.empty()) {icon_over = cv::Mat::zeros(cv::Size(40, 40), CV_8UC3);}
+        if (icon_down.empty()) {icon_down = cv::Mat::ones(cv::Size(40, 40), CV_8UC3); icon_down.setTo(cv::Scalar(255, 255, 255));}
+        this->iconListBlock.push_back({icon_idle, icon_over, icon_down});
+    }
+    // Load icon Parameters images
+    for (const auto& iconName : this->iconNameFileParameters) {
+        cv::Mat icon_idle = cv::imread(this->iconFolder + iconName + "-idle.png");
+        cv::Mat icon_over = cv::imread(this->iconFolder + iconName + "-over.png");
+        cv::Mat icon_down = cv::imread(this->iconFolder + iconName + "-down.png");
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // faire mon traitement python d'image si l'image existe !!!!!!!!!!!!!!!!!!
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // If cannot open image then black image
+        if (icon_idle.empty()) {icon_idle = cv::Mat::ones(cv::Size(40, 40), CV_8UC3); icon_idle.setTo(cv::Scalar(82, 82, 82));}
+        if (icon_over.empty()) {icon_over = cv::Mat::zeros(cv::Size(40, 40), CV_8UC3);}
+        if (icon_down.empty()) {icon_down = cv::Mat::ones(cv::Size(40, 40), CV_8UC3); icon_down.setTo(cv::Scalar(255, 255, 255));}
+        this->iconListParameters.push_back({icon_idle, icon_over, icon_down});
+    }
+};
 
 bool ImageApp::openStarterImage(const std::string& imagePath) {
     this->imagePathName = imagePath;
@@ -32,7 +61,7 @@ bool ImageApp::openStarterImage(const std::string& imagePath) {
 
 
 /* ************************************************* */
-/* Getter */
+/* Getters */
 /* ************************************************* */
 
 cv::Mat& ImageApp::getFrame() {
@@ -56,7 +85,7 @@ cv::Mat ImageApp::getImageView() {
 
 
 /* ************************************************* */
-/* Setter */
+/* Setters */
 /* ************************************************* */
 void ImageApp::setOption(int newOption) {
     if (this->option != newOption) {
@@ -66,45 +95,37 @@ void ImageApp::setOption(int newOption) {
 
 }
 
+void ImageApp::applyParameter(int parameter) {
+    switch (parameter) {
+        case SAVE: saveImage(); break;
+        case NEW: newImage(); break;
+        case RESET: resetImage(); break;
+    }
+
+}
+
 /* ************************************************* */
-/* Block */
+/* Blocks */
 /* ************************************************* */
 
 void ImageApp::topLeftBlock() {
     cvui::window(this->frame, 0, 0, 300, 200, "Options");
-
-    // Button & grid parameters & info-bulles list
-    std::vector<std::string> messages = {"Brightness", "Rotate", "Resize", "Crop", "Dilatation", "Erosion", "Canny edge", "Panorama"};
-    int buttonWidth = 40;
-    int buttonHeight = 40;
-    int buttonsPerRow = 6;
-
-    // Icon import
-    std::vector<std::string> iconNameFile = {"brightness", "rotate", "scissors", "crop", "dilatation", "erosion", "cannyEdge", "panorama"};
-    std::vector<std::vector<cv::Mat>> iconList;
-    for (const auto& iconName : iconNameFile) {
-        cv::Mat icon_idle = cv::imread(this->iconFolder + iconName + "-idle.png", cv::IMREAD_COLOR);
-        cv::Mat icon_over = cv::imread(this->iconFolder + iconName + "-over.png", cv::IMREAD_COLOR);
-        cv::Mat icon_down = cv::imread(this->iconFolder + iconName + "-down.png", cv::IMREAD_COLOR);
-        iconList.push_back({icon_idle, icon_over, icon_down});
-    } // no image check : the iconButton will be black
-
     // Button creation
-    for (int i = 0; i < messages.size(); i++) {
-        int x = (i % buttonsPerRow) * (buttonWidth + 10) + 5;
-        int y = (i / buttonsPerRow) * (buttonHeight + 10) + 25;
-        if (cvui::button(this->frame, x, y,iconList[i][0], iconList[i][1], iconList[i][2])) {
+    for (int i = 0; i < this->messagesBlock.size(); i++) {
+        int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + 5;
+        int y = (i / this->buttonsPerRow) * (this->buttonHeight + 10) + 25;
+        if (cvui::button(this->frame, x, y, this->iconListBlock[i][IDLE], this->iconListBlock[i][OVER], this->iconListBlock[i][DOWN])) {
             this->setOption(i);
         }
     }
     // Info-bulles creation after cursor position checking
-    for (int i = 0; i < messages.size(); i++) {
-        int x = (i % buttonsPerRow) * (buttonWidth + 10) + 5;
-        int y = (i / buttonsPerRow) * (buttonHeight + 10) + 25;
+    for (int i = 0; i < this->messagesBlock.size(); i++) {
+        int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + 5;
+        int y = (i / this->buttonsPerRow) * (this->buttonHeight + 10) + 25;
         cv::Point mouse = cvui::mouse();
-        cv::Rect buttonRect(x, y, buttonWidth, buttonHeight);
+        cv::Rect buttonRect(x, y, this->buttonWidth, this->buttonHeight);
         if (buttonRect.contains(mouse)) {
-            cvui::printf(this->frame, mouse.x, mouse.y - 20, 0.4, 0xeeeeee, messages[i].c_str());
+            cvui::printf(this->frame, mouse.x, mouse.y - 20, 0.4, 0xeeeeee, this->messagesBlock[i].c_str());
         }
     }
 }
@@ -130,38 +151,53 @@ void ImageApp::centerBlock() {
 }
 
 void ImageApp::topRightBlock() {
-    cvui::window(this->frame, 600, 0, 300, 400, "Parameters");
-    cvui::beginColumn(this->frame, 600, 20, 300, 400);
-    cvui::space(5);
-    cvui::button("save image");
-    if (cvui::button("change image")) {
-        system("explorer");
+    cvui::window(this->frame, 600, 0, 600, 500, "Parameters"); // if image
+    /*cvui::window(this->frame, 600, 0, 300, 200, "Parameters");
+    cvui::window(this->frame, 600, 200, 300, 200, "Others Parameters");*/ // if vidéo
+
+    // Button creation
+    for (int i = 0; i < this->messagesParameters.size(); i++) {
+        int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + 605;
+        int y = (i / this->buttonsPerRow) * (this->buttonHeight + 10) + 25;
+        if (cvui::button(this->frame, x, y, this->iconListParameters[i][IDLE], this->iconListParameters[i][OVER], this->iconListParameters[i][DOWN])) {
+            this->applyParameter(i);
+        }
     }
-    if (cvui::button("reset Image")) {
-        this->imageView = this->imageSource.clone();
+    // Info-bulles creation after cursor position checking
+    for (int i = 0; i < this->messagesParameters.size(); i++) {
+        int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + 605;
+        int y = (i / this->buttonsPerRow) * (this->buttonHeight + 10) + 25;
+        cv::Point mouse = cvui::mouse();
+        cv::Rect buttonRect(x, y, this->buttonWidth, this->buttonHeight);
+        if (buttonRect.contains(mouse)) {
+            cvui::printf(this->frame, mouse.x, mouse.y - 20, 0.4, 0xeeeeee, this->messagesParameters[i].c_str());
+        }
     }
-    cvui::endColumn();
 }
 
 void ImageApp::bottomBlock(cv::Point cursor) {
-    cvui::beginRow(this->frame, 0, 500);
-    cvui::printf(0.4, 0x00ff00, "cursor: x = %d y = %d", cursor.x, cursor.y);
+    cvui::rect(frame, 0, 498, 902, 22, 0x4a4a4a, 0x313131);
+    cvui::beginRow(this->frame, 5, 505, -1, -1, 50);
+    cvui::printf(0.4, 0xffffff, "image size: cols = %d rows = %d", this->imageSave.cols, this->imageSave.rows);
+    cvui::printf(0.4, 0xffffff, "cursor: x = %d y = %d", cursor.x, cursor.y);
     cvui::endRow();
 }
 
 /* ************************************************* */
-/* Panel */
+/* Panels */
 /* ************************************************* */
 
 void ImageApp::brightnessPanel() {
-    cvui::window(this->frame, 0, 200, 300, 200, "brightnessPanel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 200, 10);
+    cvui::window(this->frame, 0, 200, 300, 300, "Brightness Panel");
+    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
+    cvui::checkbox( "Checkbox label", &checked);
+
     cvui::endColumn();
 }
 
 void ImageApp::rotatePanel() {
-    cvui::window(this->frame, 0, 200, 300, 200, "rotatePanel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 200, 10);
+    cvui::window(this->frame, 0, 200, 300, 300, "Rotate Panel");
+    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
     cvui::space(5);
     if (cvui::trackbar(300, &this->valuePivot, (double)-180, (double)180)) {
         // action sur image
@@ -169,62 +205,54 @@ void ImageApp::rotatePanel() {
         cv::Mat RotationMatrix = getRotationMatrix2D(center, this->valuePivot, 1);
         warpAffine(this->imageSave, this->imageView, RotationMatrix, this->imageSave.size());
     }
+    this->defaultValueBlock(valuePivot);
     cvui::endColumn();
 }
 
 void ImageApp::resizePanel() {
-    cvui::window(this->frame, 0, 200, 300, 200, "Actions");
-    cvui::beginColumn(this->frame, 0, 220, 300, 200, 10);
-    cvui::text("resizePanel");
+    cvui::window(this->frame, 0, 200, 300, 300, "Resize Panel");
+    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
+
+    cvui::counter(&count);
+    this->defaultValueBlock(count);
     cvui::endColumn();
 }
 
 void ImageApp::cropPanel() {
-    cvui::window(this->frame, 0, 200, 300, 200, "Actions");
-    cvui::beginColumn(this->frame, 0, 220, 300, 200, 10);
-    cvui::text("cropPanel");
+    cvui::window(this->frame, 0, 200, 300, 300, "Crop Panel");
+    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
     cvui::endColumn();
 }
 
 void ImageApp::dilatationPanel() {
-    cvui::window(this->frame, 0, 200, 300, 200, "Actions");
-    cvui::beginColumn(this->frame, 0, 220, 300, 200, 10);
-    cvui::text("dilatationPanel");
-    cvui::space(5);
+    cvui::window(this->frame, 0, 200, 300, 300, "Dilatation Panel");
+    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
+
     if (cvui::trackbar(300, &valueDilatation, (double)1.0, (double)100.0)) {
         cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((int)valueDilatation, (int)valueDilatation), cv::Point(-1, -1));
         cv::dilate(this->imageSave, this->imageView,element, cv::Point(-1, -1), 1);
     }
-    if (cvui::button("Default")) {
-        valueDilatation = 1;
-        valueErosion = 1;
-        this->imageView = this->imageSave.clone();
-    }
 
+    this->defaultValueBlock(valueDilatation);
     cvui::endColumn();
 }
 
 void ImageApp::erosionPanel() {
-    cvui::window(this->frame, 0, 200, 300, 200, "Actions");
-    cvui::beginColumn(this->frame, 0, 220, 300, 200, 10);
-    cvui::text("erosionPanel");
-    cvui::space(5);
+    cvui::window(this->frame, 0, 200, 300, 300, "Erosion Panel");
+    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
+
     if (cvui::trackbar(300, &valueErosion, (double)1.0, (double)100.0)) {
         cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((int)valueErosion, (int)valueErosion), cv::Point(-1, -1));
         cv::erode(this->imageSave, this->imageView,element, cv::Point(-1, -1), 1);
     }
-    if (cvui::button("Default")) {
-        valueDilatation = 1;
-        valueErosion = 1;
-        this->imageView = this->imageSave.clone();
-    }
+    this->defaultValueBlock(valueErosion);
     cvui::endColumn();
 }
 
 void ImageApp::cannyEdgePanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Actions");
+    cvui::window(this->frame, 0, 200, 300, 300, "Canny Edge Panel");
     cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
-    cvui::text("cannyEdgePanel");
+
     cvui::space(5);
     if (cvui::trackbar(300, &this->blurredValue, (double)0.0, (double)10.0)) {}
     cvui::trackbar(300, &this->lowThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
@@ -233,13 +261,38 @@ void ImageApp::cannyEdgePanel() {
 }
 
 void ImageApp::panoramaPanel() {
-    cvui::window(this->frame, 0, 200, 300, 200, "Actions");
-    cvui::beginColumn(this->frame, 0, 220, 300, 200, 10);
-    cvui::text("panoramaPanel");
+    cvui::window(this->frame, 0, 200, 300, 300, "Panorama Panel");
+    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
+
     cvui::endColumn();
 }
 
 
 
+/* ************************************************* */
+/* Parameters */
+/* ************************************************* */
 
+void ImageApp::saveImage() {
+    // need to read the imagePath exension to save in the right format
+    imwrite (this->imageOutputPath, this->imageView);
+}
+void ImageApp::newImage() {
+    system("explorer");
+}
+void ImageApp::resetImage() {
+    this->imageView = this->imageSource.clone();
+    this->imageSave = this->imageSource.clone();
+    // Reset Trackbar Panel Values
+    this->valueDilatation =0;
+    this->valueErosion = 0;
+    this->valuePivot = 0;
+    this->blurredValue=0; this->lowThreshold=0; this->highThreshold=0;
+}
 
+void ImageApp::defaultValueBlock(double& trackbarVariable) {
+    if (cvui::button(this->frame, 112, 460, "Default")) {
+        trackbarVariable = 1;
+        this->imageView = this->imageSave.clone();
+    }
+}
