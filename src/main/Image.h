@@ -17,6 +17,8 @@
 class Image
 {
 	cv::Mat m_imageSource;
+    std::vector<cv::Mat> m_imageHistory;
+    size_t m_historyIndex; 
 
 public:
 	// Constructors
@@ -38,5 +40,8 @@ public:
     Image Erosion(int SEsize);
 
 	void Display(std::string name);
-
+	void SaveHistory(const cv::Mat& modifiedImage);
+	void DisplayHistory();
+	Image ControlZ();
+	Image ControlY();
 };

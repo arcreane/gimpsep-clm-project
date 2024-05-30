@@ -8,25 +8,34 @@ int main()
 	std::string folderPath = "../src/ressources/stitching/";
 
 	Image myImage(imagePath);
-	PanoramaCreator myPano(folderPath);
-	
-	Image brighterImage = myImage.Brightness(80);
-	Image scaledImage = myImage.Resize(1);
-	Image croppedImage = myImage.Crop(5, 120, 6, 300);
-	Image rotatedImage = myImage.Rotate(75, {myImage.cols()/2, myImage.rows()/2});
-	Image edges = myImage.CannyEdge(1.5, 150, 200);
-	Image dilateImage = myImage.Dilatation(9);
-	Image erodeImage = myImage.Erosion(9);
-	Image panorama = myPano.CreatePanorama(myPano.getListImages());
-
 	myImage.Display("Input Image");
-	brighterImage.Display("Brightened Image");
-	scaledImage.Display("Resized Image");
-	croppedImage.Display("Cropped Image");
-	rotatedImage.Display("Rotated Image ");
-	edges.Display("Canny Edges");
-	dilateImage.Display("Dilated Image");
-	erodeImage.Display("Eroded Image");
+	
+    myImage = myImage.Rotate(75, {myImage.cols() / 2, myImage.rows() / 2});
+    myImage.Display("Rotated Image");
+    myImage = myImage.Brightness(80);
+	myImage.Display("Brightened Image");
+    myImage = myImage.Resize(3);
+    myImage.Display("Resized Image");
+    myImage = myImage.Crop(5, 320, 6, 400);
+    myImage.Display("Cropped Image");
+    myImage = myImage.CannyEdge(1.5, 150, 200);
+    myImage.Display("Canny Edges");
+    myImage = myImage.Dilatation(9);
+    myImage.Display("Dilated Image");
+    myImage = myImage.Erosion(9);
+    myImage.Display("Eroded Image");
+
+    myImage = myImage.ControlZ();
+    myImage.Display("After ControlZ");
+
+    myImage = myImage.ControlZ();
+    myImage.Display("After ControlZ");
+
+    myImage = myImage.ControlY();
+    myImage.Display("After ControlY");
+
+	PanoramaCreator myPano(folderPath);
+	Image panorama = myPano.CreatePanorama(myPano.getListImages());
 	panorama.Display("Reconstructed Panorama");
 
 	return 0;

@@ -11,6 +11,8 @@ Image::Image(const string& imagePath)
 	if (m_imageSource.empty()) {
     	cout << "Could not open or find the image" << endl;
     }
+    m_imageHistory.clear(); // Initialize history
+    m_historyIndex = 0;
 }
 
 Image::Image(Mat& imageMat)
@@ -34,6 +36,8 @@ Image Image::Brightness(int brightnessFactor)
 {
     Mat adjustedImage;
     m_imageSource.convertTo(adjustedImage, m_imageSource.type(), 1, brightnessFactor);
+    SaveHistory(adjustedImage);
+    cout << "Size: " << m_imageHistory.size() << endl;
     return Image(adjustedImage);
 }
 
@@ -47,7 +51,8 @@ Image Image::Resize(double scalingFactor)
 	Mat tmp;
 	if(scalingFactor!=0)
 		resize(m_imageSource, tmp, Size(round(scalingFactor*m_imageSource.cols),round(scalingFactor*m_imageSource.rows)), scalingFactor, scalingFactor, INTER_LINEAR);
-	return Image(tmp);
+    SaveHistory(tmp);
+    return Image(tmp);
 }
 
 
@@ -69,6 +74,7 @@ Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
 	if (startCol < 0)
 		startCol = 0;
 	Mat tmp = m_imageSource(Range(startRow, endRow), Range(startCol, endCol));
+    SaveHistory(tmp);
 	return Image(tmp);
 }
 
@@ -93,6 +99,7 @@ Image Image::Rotate(double rotationAngle, std::vector<int> centerPoints)
 	Point2f center(centerPoints.at(0), centerPoints.at(1));
 	Mat RotationMatrix = getRotationMatrix2D(center, rotationAngle, 1);
 	warpAffine(m_imageSource, tmp, RotationMatrix, m_imageSource.size());
+    SaveHistory(tmp);
 	return Image(tmp);
 }
 
@@ -108,6 +115,7 @@ Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
     Mat imageEdges, blurredImage;
  	GaussianBlur(m_imageSource, blurredImage,Size(5, 5), blurredValue); 
     Canny(blurredImage, imageEdges,lowThreshold,highThreshold);
+    SaveHistory(imageEdges);
     return Image(imageEdges);
 }
 
@@ -120,6 +128,7 @@ Image Image::Dilatation(int SEsize)
     Mat tmp;
     Mat structElement = getStructuringElement(MORPH_RECT, Size(SEsize, SEsize), Point(-1, -1));
     dilate(m_imageSource, tmp, structElement, Point(-1, -1), 1);
+    SaveHistory(tmp);
     return Image(tmp);
 }
 
@@ -132,6 +141,7 @@ Image Image::Erosion(int SEsize)
     Mat tmp;
     Mat structElement = getStructuringElement(MORPH_RECT, Size(SEsize, SEsize), Point(-1, -1));
     erode(m_imageSource, tmp, structElement, Point(-1, -1), 1);
+    SaveHistory(tmp);
     return Image(tmp);
 }
 
@@ -141,4 +151,79 @@ void Image::Display(string name)
 	imshow(name, m_imageSource);
   	waitKey(0);
   	destroyWindow(name);
+}
+
+/** Save history : keeps the 10 previous images as clones 
+ * @param modifiedImage = new modiifed image to save
+
+void Image::SaveHistory(const cv::Mat& modifiedImage)
+{
+    m_imageHistory.insert(m_imageHistory.begin(), modifiedImage.clone());
+    if (m_imageHistory.size() > 10)
+    {
+        m_imageHistory.pop_back();
+    }
+}
+ **/
+
+void Image::SaveHistory(const cv::Mat& modifiedImage)
+{
+    // Store the modified image in history
+    m_imageHistory.push_back(modifiedImage.clone());
+
+    // Limit the history size to 10
+    if (m_imageHistory.size() > 10)
+    {
+        m_imageHistory.erase(m_imageHistory.begin());
+    }
+
+    // Update the history index to point to the latest image
+    m_historyIndex = m_imageHistory.size() - 1;
+    
+    // Debug output to verify
+    cout << "Size: " << m_imageHistory.size() << endl;
+    cout << "Index number: " << m_historyIndex << endl;
+}
+
+
+void Image::DisplayHistory()
+{
+    for (size_t i = 0; i < m_imageHistory.size(); ++i)
+    {
+        string windowName = "History Image " + std::to_string(i + 1);
+        imshow(windowName, m_imageHistory[i]);
+        waitKey(0);  // Wait for a key press
+        destroyWindow(windowName);  // Close the window
+    }
+}
+
+
+Image Image::ControlZ() {
+    if (m_historyIndex > 0) 
+    {
+        // Move one step back in history
+        m_historyIndex--;
+        m_imageSource = m_imageHistory[m_historyIndex];
+        cout << "Undo successful." << endl;
+    } 
+    else 
+    {
+        cout << "No more history to revert to." << endl;
+    }
+    return Image(m_imageSource);
+}
+
+Image Image::ControlY() {
+    if (m_historyIndex < m_imageHistory.size() - 1) 
+    {
+        // Move one step forward in history
+        m_historyIndex++;
+        m_imageSource = m_imageHistory[m_historyIndex];
+        cout << "Redo successful." << endl;
+    }
+    else
+    {
+        cout << "Already at the latest image." << endl;
+    }
+    return Image(m_imageSource);
 }
