@@ -19,13 +19,16 @@ Image::Image(Mat& imageMat)
 }
 
 
+
 // Define the getters
 Mat Image::getImage(){return m_imageSource;}
 
+
+
+// Define the methods
 /**
- * Lighten/Darken
- * Plays on the image's brightness
- * brightnessFactor = Int from -250 to 250 
+ * Lighten/Darken : plays on the image's brightness
+ * @param brightnessFactor = int from -250 to 250 
  **/ 
 Image Image::Brightness(int brightnessFactor)
 {
@@ -36,9 +39,8 @@ Image Image::Brightness(int brightnessFactor)
 
 
 /**
- * Resizing
- * Plays on the size of the image
- * scalingFactor = float from 0(inexistant) to 5(5 times normal size) with 1 being the usual image size
+ * Resizing  : plays on the size of the image
+ * @param scalingFactor = float from 0(inexistant) to 5 (5 times normal size) with 1 being the original image size
  **/ 
 Image Image::Resize(double scalingFactor)
 {
@@ -50,12 +52,11 @@ Image Image::Resize(double scalingFactor)
 
 
 /**
- * Croping
- * Cuts the image in a smaller rectangle form
- * startRow = int vertical min value 
- * endRow = int vertical max value
- * startCol = int horizontal min value
- * endCol = int horizontal max value
+ * Cropping : cuts the image in a smaller rectangle form
+ * @param startRow = int vertical min value 
+ * @param endRow = int vertical max value
+ * @param startCol = int horizontal min value
+ * @param endCol = int horizontal max value
  **/ 
 Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
 {
@@ -82,10 +83,9 @@ int Image::rows()
 	return m_imageSource.rows;
 }
 /**
- * Rotating
- * Rotates the image around a center point
- * rotationAngle = btw 0 and 360
- * centerPoints = vector of two int
+ * Rotating : rotates the image around a center point (a,b)
+ * @param rotationAngle = btw 0 and 360
+ * @param centerPoints = vector of two int {a,b}
  **/ 
 Image Image::Rotate(double rotationAngle, std::vector<int> centerPoints)
 {
@@ -98,11 +98,10 @@ Image Image::Rotate(double rotationAngle, std::vector<int> centerPoints)
 
 
 /**
- * Drawing Edges
- * Draws the apparent edges of the image
- * blurredValue = float btw 0 and 1
- * lowThreshold = int btw 0 and 255
- * highThreshold = int btw 0 and 255
+ * Drawing Edges : draws the apparent edges of the image
+ * @param blurredValue = float btw 0 and 1
+ * @param lowThreshold = int btw 0 and 255
+ * @param highThreshold = int btw 0 and 255
  **/ 
 Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
 {
@@ -113,9 +112,8 @@ Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
 }
 
 /**
- * Dilate 
- * Increase the volume of the white structures
- * SEsize = int btw 1 and 99 (usually closer to 13)
+ * Dilate : increase the volume of the white structures
+ * @param SEsize = int btw 1 and 99 (usually closer to 13)
  **/ 
 Image Image::Dilatation(int SEsize)
 {
@@ -126,9 +124,8 @@ Image Image::Dilatation(int SEsize)
 }
 
 /**
- * Erode  
- * Decrease the volume of the white structures
- * SEsize = int btw 1 and 99 (usually closer to 13)
+ * Erode : decrease the volume of the white structures
+ * @param SEsize = int btw 1 and 99 (usually closer to 13)
  **/ 
 Image Image::Erosion(int SEsize)
 {
@@ -139,8 +136,9 @@ Image Image::Erosion(int SEsize)
 }
 
 
-void Image::Display()
+void Image::Display(string name)
 {
-	imshow("Original Image", m_imageSource);
+	imshow(name, m_imageSource);
   	waitKey(0);
+  	destroyWindow(name);
 }

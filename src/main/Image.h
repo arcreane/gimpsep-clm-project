@@ -19,13 +19,14 @@ class Image
 	cv::Mat m_imageSource;
 
 public:
-
+	// Constructors
 	Image(const std::string& imagePath);
 	Image(cv::Mat& imageMat);
 
-    cv::Mat getImageSource();
+	// Getter
     cv::Mat getImage();
 	
+	// Methods
 	Image Brightness(int brightnessFactor);
 	int cols();
 	int rows();
@@ -36,6 +37,6 @@ public:
     Image Dilatation(int SEsize);
     Image Erosion(int SEsize);
 
-	void Display();
+	void Display(std::string name);
 
 };

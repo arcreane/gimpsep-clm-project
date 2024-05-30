@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Image.h"
+
 #include <iostream>
 #include <string>
 #include <utility>
@@ -16,9 +18,17 @@
 
 class PanoramaCreator
 {	
-	std::vector<Image> m_listImages;
 
 public:
+	// Parameters
+	std::vector<std::string> m_listImages;
+
+	// Constructeur
 	PanoramaCreator(const std::string& folderPath);
-    static Image CreatePanorama(const std::vector<Image>& listImages);
+
+	// Getter
+	std::vector<std::string> getListImages();
+
+	// Methods
+    static Image CreatePanorama(const std::vector<std::string>& listImages);
 };

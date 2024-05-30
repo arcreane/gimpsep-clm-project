@@ -1,11 +1,10 @@
 #include "PanoramaCreator.h"
-#include "Image.h"
 
 using namespace std;
 using namespace cv;
 
-
-PanoramaCreator::PanoramaCreator(const std::string& folderPath)
+// Define the constructor
+PanoramaCreator::PanoramaCreator(const string& folderPath)
 {
     set<string> valid_extensions = {".jpg", ".webp", ".png", ".jpeg"};
     for (const auto &file : std::filesystem::directory_iterator(folderPath))
@@ -20,7 +19,25 @@ PanoramaCreator::PanoramaCreator(const std::string& folderPath)
 }
 
 
-Image PanoramaCreator::CreatePanorama(vector<string> & m_listImages) {
+// Define getter
+vector<string> PanoramaCreator::getListImages()
+{
+    return m_listImages;
+}
+
+ /**
+  * The purpose of this function is to take as parameters the name of several images, and try to stitch them together,
+  * ie detecting the common part.
+  *
+  * \nhttps://docs.opencv.org/2.4/modules/stitching/doc/stitching.html
+  * \nhttps://docs.opencv.org/2.4/modules/stitching/doc/introduction.html
+  * \nhttps://www.geeksforgeeks.org/stitching-input-images-panorama-using-opencv-c/
+  * \nhttps://pyimagesearch.com/2018/12/17/image-stitching-with-opencv-and-python/
+  *
+  * @param m_listImages: list of the names of the images
+  * @return Image
+  */
+Image PanoramaCreator::CreatePanorama(const vector<string>& listImages) {
     // Define object to store the stitched image
     Mat pano;
     // Define mode for stitching as panorama
@@ -28,7 +45,7 @@ Image PanoramaCreator::CreatePanorama(vector<string> & m_listImages) {
     // Array for pictures
     vector<Mat> imgs;
     // import all images
-    for (const std::string &i : m_listImages) {
+    for (const std::string &i : listImages) {
         Mat img = imread(i);
         if (img.empty()) {
             return Image(pano);
