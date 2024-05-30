@@ -15,22 +15,27 @@
 // https://github.com/Dovyski/cvui
 // https://fernandobevilacqua.com/cvui/components/image/
 
-#define WINDOW_NAME "CVUI Hello World!"
+#define WINDOW_NAME "CVUI IMAGE TREATEMENT ISEP"
 enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE, PANORAMA};
 
 
 class ImageApp {
 
 private:
-    cv::Mat frame = cv::Mat(520, 900, CV_8UC3);
+    std::string iconFolder = "../src/ressources/icon/";
+    cv::Mat frame = cv::Mat(520, 900, CV_8UC3); // windows size here
     int option = BRIGHTNESS;
 
+    // For checkpoint image saving
     std::string imagePathName;
     cv::Mat imageSource, imageSave, imageView;
 
-    double valueDilatation =0; double valueErosion = 0;
+    // trackbar values
+    double valueDilatation =0;
+    double valueErosion = 0;
     double valuePivot = 0;
     double blurredValue=0; double lowThreshold=0; double highThreshold=0;
+
 
 public:
     // constructor
