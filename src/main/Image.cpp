@@ -1,4 +1,4 @@
-#include "Image_Lucie.h"
+#include "Image.h"
 #include <filesystem> 
 
 using namespace std;
@@ -10,7 +10,6 @@ Image::Image(const string& imagePath)
 	m_imageSource = imread(imagePath, IMREAD_COLOR);
 	if (m_imageSource.empty()) {
     	cout << "Could not open or find the image" << endl;
-    	// return -1;
     }
 }
 
@@ -19,9 +18,26 @@ Image::Image(Mat& imageMat)
 	m_imageSource = imageMat;
 }
 
+
+// Define the getters
+Mat Image::getImage(){return m_imageSource;}
+
+/**
+ * Lighten/Darken
+ * Plays on the image's brightness
+ * brightnessFactor = Int from -250 to 250 
+ **/ 
+Image Image::Brightness(int brightnessFactor)
+{
+    Mat adjustedImage;
+    m_imageSource.convertTo(adjustedImage, m_imageSource.type(), 1, brightnessFactor);
+    return Image(adjustedImage);
+}
+
+
 /**
  * Resizing
- * plays on the size of the image
+ * Plays on the size of the image
  * scalingFactor = float from 0(inexistant) to 5(5 times normal size) with 1 being the usual image size
  **/ 
 Image Image::Resize(double scalingFactor)
@@ -32,9 +48,10 @@ Image Image::Resize(double scalingFactor)
 	return Image(tmp);
 }
 
+
 /**
  * Croping
- * cuts the image in a smaller rectangle form
+ * Cuts the image in a smaller rectangle form
  * startRow = int vertical min value 
  * endRow = int vertical max value
  * startCol = int horizontal min value
@@ -64,7 +81,6 @@ int Image::rows()
 {
 	return m_imageSource.rows;
 }
-
 /**
  * Rotating
  * Rotates the image around a center point
@@ -80,6 +96,7 @@ Image Image::Rotate(double rotationAngle, std::vector<int> centerPoints)
 	return Image(tmp);
 }
 
+
 /**
  * Drawing Edges
  * Draws the apparent edges of the image
@@ -94,6 +111,33 @@ Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
     Canny(blurredImage, imageEdges,lowThreshold,highThreshold);
     return Image(imageEdges);
 }
+
+/**
+ * Dilate 
+ * Increase the volume of the white structures
+ * SEsize = int btw 1 and 99 (usually closer to 13)
+ **/ 
+Image Image::Dilatation(int SEsize)
+{
+    Mat tmp;
+    Mat structElement = getStructuringElement(MORPH_RECT, Size(SEsize, SEsize), Point(-1, -1));
+    dilate(m_imageSource, tmp, structElement, Point(-1, -1), 1);
+    return Image(tmp);
+}
+
+/**
+ * Erode  
+ * Decrease the volume of the white structures
+ * SEsize = int btw 1 and 99 (usually closer to 13)
+ **/ 
+Image Image::Erosion(int SEsize)
+{
+    Mat tmp;
+    Mat structElement = getStructuringElement(MORPH_RECT, Size(SEsize, SEsize), Point(-1, -1));
+    erode(m_imageSource, tmp, structElement, Point(-1, -1), 1);
+    return Image(tmp);
+}
+
 
 void Image::Display()
 {
