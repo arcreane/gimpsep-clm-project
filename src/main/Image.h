@@ -2,10 +2,8 @@
 
 #include <iostream>
 #include <string>
-#include <utility>
-#include <filesystem>
-#include <set>
 #include <algorithm>
+#include <vector>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -17,8 +15,6 @@
 class Image
 {
 	cv::Mat m_imageSource;
-    std::vector<cv::Mat> m_imageHistory;
-    size_t m_historyIndex; 
 
 public:
 	// Constructors
@@ -39,9 +35,5 @@ public:
     Image Dilatation(int SEsize);
     Image Erosion(int SEsize);
 
-	void Display(std::string name);
-	void SaveHistory(const cv::Mat& modifiedImage);
-	void DisplayHistory();
-	Image ControlZ();
-	Image ControlY();
+	void Display();
 };

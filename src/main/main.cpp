@@ -1,5 +1,6 @@
 #include "Image.h"
 #include "PanoramaCreator.h"
+#include "ImageHandler.h"
 #include <string>
 
 int main()
@@ -7,36 +8,60 @@ int main()
 	std::string imagePath = "../src/ressources/HappyFish.jpg";
 	std::string folderPath = "../src/ressources/stitching/";
 
-	Image myImage(imagePath);
-	myImage.Display("Input Image");
-	
-    myImage = myImage.Rotate(75, {myImage.cols() / 2, myImage.rows() / 2});
-    myImage.Display("Rotated Image");
-    myImage = myImage.Brightness(80);
-	myImage.Display("Brightened Image");
-    myImage = myImage.Resize(3);
-    myImage.Display("Resized Image");
-    myImage = myImage.Crop(5, 320, 6, 400);
-    myImage.Display("Cropped Image");
-    myImage = myImage.CannyEdge(1.5, 150, 200);
-    myImage.Display("Canny Edges");
-    myImage = myImage.Dilatation(9);
-    myImage.Display("Dilated Image");
-    myImage = myImage.Erosion(9);
-    myImage.Display("Eroded Image");
+	Image img(imagePath);	
 
-    myImage = myImage.ControlZ();
-    myImage.Display("After ControlZ");
+    ImageHandler imgHandler(img);
+    imgHandler.Display();
 
-    myImage = myImage.ControlZ();
-    myImage.Display("After ControlZ");
+    // Apply brightness adjustment
+    imgHandler.Brightness(50);
+    imgHandler.Display();
 
-    myImage = myImage.ControlY();
-    myImage.Display("After ControlY");
+    // Rotate the image by 45 degrees around the center
+    std::vector<int> centerPoints = { img.cols() / 2, img.rows() / 2 };
+    imgHandler.Rotate(45, centerPoints);
+    imgHandler.Display();
+
+    // Resize the image to half its size
+    imgHandler.Resize(2.5);
+    imgHandler.Display();
+
+    // Crop the image to a central region
+    int startRow = 200;
+    int endRow = 600;
+    int startCol = 0;
+    int endCol = 3 * img.cols();
+    imgHandler.Crop(startRow, endRow, startCol, endCol);
+    imgHandler.Display();
+
+    // Apply dilation
+    imgHandler.Dilatation(13);
+    imgHandler.Display();
+
+    // Apply erosion
+    imgHandler.Erosion(13);
+    imgHandler.Display();
+
+    // Undo the last operation (erosion)
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    // Rotate the image by 45 degrees around the center
+    imgHandler.Rotate(45, centerPoints);
+    imgHandler.Display();
 
 	PanoramaCreator myPano(folderPath);
 	Image panorama = myPano.CreatePanorama(myPano.getListImages());
-	panorama.Display("Reconstructed Panorama");
+	panorama.Display();
 
 	return 0;
 }
