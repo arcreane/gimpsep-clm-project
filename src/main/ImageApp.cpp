@@ -104,12 +104,17 @@ void ImageApp::applyParameter(int parameter) {
 
 }
 
+
+
 /* ************************************************* */
 /* Blocks */
 /* ************************************************* */
 
 void ImageApp::topLeftBlock() {
-    cvui::window(this->frame, 0, 0, 300, 200, "Options");
+    int height = windowHeight * topBlocksHeight / 100;
+    int x = 0; int y = 0;
+    cvui::window(this->frame, x, y, widthBlocks, height, "Options");
+
     // Button creation
     for (int i = 0; i < this->messagesBlock.size(); i++) {
         int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + 5;
@@ -147,26 +152,31 @@ void ImageApp::centerBlock() {
     // resize image pour que sa taille soit fixe sur l'ecran si taille trop grande
     // centrer image
     // cvui::window(frame, 300, 0, 300, 400, "Image");
-    cvui::image(this->frame, 325, 100, this->imageView);
+    int x = (windowWidth / 2) - (this->imageSave.cols / 2);
+    int y = (windowHeight / 2) - (this->imageSave.rows / 2);
+    cvui::image(this->frame, x, y, this->imageView);
 }
 
 void ImageApp::topRightBlock() {
-    cvui::window(this->frame, 600, 0, 600, 500, "Parameters"); // if image
+    int height = windowHeight * topBlocksHeight / 100;
+    int xW = windowWidth - widthBlocks;
+    int yW = 0;
+    cvui::window(this->frame, xW, yW, widthBlocks, height, "Parameters"); // if image
     /*cvui::window(this->frame, 600, 0, 300, 200, "Parameters");
     cvui::window(this->frame, 600, 200, 300, 200, "Others Parameters");*/ // if vidéo
 
     // Button creation
     for (int i = 0; i < this->messagesParameters.size(); i++) {
-        int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + 605;
-        int y = (i / this->buttonsPerRow) * (this->buttonHeight + 10) + 25;
+        int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + xW + 5;
+        int y = (i / this->buttonsPerRow) * (this->buttonHeight + 10) + yW + 25;
         if (cvui::button(this->frame, x, y, this->iconListParameters[i][IDLE], this->iconListParameters[i][OVER], this->iconListParameters[i][DOWN])) {
             this->applyParameter(i);
         }
     }
     // Info-bulles creation after cursor position checking
     for (int i = 0; i < this->messagesParameters.size(); i++) {
-        int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + 605;
-        int y = (i / this->buttonsPerRow) * (this->buttonHeight + 10) + 25;
+        int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + xW + 5;
+        int y = (i / this->buttonsPerRow) * (this->buttonHeight + 10) + yW + 25;
         cv::Point mouse = cvui::mouse();
         cv::Rect buttonRect(x, y, this->buttonWidth, this->buttonHeight);
         if (buttonRect.contains(mouse)) {
@@ -176,8 +186,9 @@ void ImageApp::topRightBlock() {
 }
 
 void ImageApp::bottomBlock(cv::Point cursor) {
-    cvui::rect(frame, 0, 498, 902, 22, 0x4a4a4a, 0x313131);
-    cvui::beginRow(this->frame, 5, 505, -1, -1, 50);
+    int y = windowHeight-bottomBlockHeight;
+    cvui::rect(frame, 0, y, windowWidth+5, bottomBlockHeight, 0x4a4a4a, 0x313131);
+    cvui::beginRow(this->frame, 5, y+5, -1, -1, 50);
     cvui::printf(0.4, 0xffffff, "image size: cols = %d rows = %d", this->imageSave.cols, this->imageSave.rows);
     cvui::printf(0.4, 0xffffff, "cursor: x = %d y = %d", cursor.x, cursor.y);
     cvui::endRow();
@@ -187,19 +198,24 @@ void ImageApp::bottomBlock(cv::Point cursor) {
 /* Panels */
 /* ************************************************* */
 
-void ImageApp::brightnessPanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Brightness Panel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
-    cvui::checkbox( "Checkbox label", &checked);
+void ImageApp::createPanelWindow(const std::string& title) {
+    int x = 0;
+    int y = windowHeight * topBlocksHeight / 100;
+    int height = windowHeight - y;
 
+    cvui::window(this->frame, x, y, widthBlocks, height, title);
+    cvui::beginColumn(this->frame, x, y+20, widthBlocks, height, 10);
+}
+
+void ImageApp::brightnessPanel() {
+    this->createPanelWindow("Rotate Panel");
+    cvui::checkbox( "Checkbox label", &checked);
     cvui::endColumn();
 }
 
 void ImageApp::rotatePanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Rotate Panel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
-    cvui::space(5);
-    if (cvui::trackbar(300, &this->valuePivot, (double)-180, (double)180)) {
+    this->createPanelWindow("Rotate Panel");
+    if (cvui::trackbar(widthBlocks, &this->valuePivot, (double)-180, (double)180)) {
         // action sur image
         cv::Point2f center((float)this->imageSave.cols/2, (float)this->imageSave.rows/2);
         cv::Mat RotationMatrix = getRotationMatrix2D(center, this->valuePivot, 1);
@@ -210,38 +226,30 @@ void ImageApp::rotatePanel() {
 }
 
 void ImageApp::resizePanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Resize Panel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
-
+    this->createPanelWindow("Resize Panel");
     cvui::counter(&count);
     this->defaultValueBlock(count);
     cvui::endColumn();
 }
 
 void ImageApp::cropPanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Crop Panel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
+    this->createPanelWindow("Crop Panel");
     cvui::endColumn();
 }
 
 void ImageApp::dilatationPanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Dilatation Panel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
-
-    if (cvui::trackbar(300, &valueDilatation, (double)1.0, (double)100.0)) {
+    this->createPanelWindow("Dilatation Panel");
+    if (cvui::trackbar(widthBlocks, &valueDilatation, (double)1.0, (double)100.0)) {
         cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((int)valueDilatation, (int)valueDilatation), cv::Point(-1, -1));
         cv::dilate(this->imageSave, this->imageView,element, cv::Point(-1, -1), 1);
     }
-
     this->defaultValueBlock(valueDilatation);
     cvui::endColumn();
 }
 
 void ImageApp::erosionPanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Erosion Panel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
-
-    if (cvui::trackbar(300, &valueErosion, (double)1.0, (double)100.0)) {
+    this->createPanelWindow("Erosion Panel");
+    if (cvui::trackbar(widthBlocks, &valueErosion, (double)1.0, (double)100.0)) {
         cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((int)valueErosion, (int)valueErosion), cv::Point(-1, -1));
         cv::erode(this->imageSave, this->imageView,element, cv::Point(-1, -1), 1);
     }
@@ -250,20 +258,15 @@ void ImageApp::erosionPanel() {
 }
 
 void ImageApp::cannyEdgePanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Canny Edge Panel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
-
-    cvui::space(5);
-    if (cvui::trackbar(300, &this->blurredValue, (double)0.0, (double)10.0)) {}
-    cvui::trackbar(300, &this->lowThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
-    cvui::trackbar(300, &this->highThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
+    this->createPanelWindow("Canny Edge Panel");
+    if (cvui::trackbar(widthBlocks, &this->blurredValue, (double)0.0, (double)10.0)) {}
+    cvui::trackbar(widthBlocks, &this->lowThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
+    cvui::trackbar(widthBlocks, &this->highThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
     cvui::endColumn();
 }
 
 void ImageApp::panoramaPanel() {
-    cvui::window(this->frame, 0, 200, 300, 300, "Panorama Panel");
-    cvui::beginColumn(this->frame, 0, 220, 300, 300, 10);
-
+    this->createPanelWindow("Panorama Panel");
     cvui::endColumn();
 }
 

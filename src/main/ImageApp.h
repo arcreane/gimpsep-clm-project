@@ -23,7 +23,13 @@ class ImageApp {
 
 private:
     std::string iconFolder = "../src/ressources/icon/";
-    cv::Mat frame = cv::Mat(520, 900, CV_8UC3); // windows size here
+    int windowWidth = 910; // in px
+    int windowHeight = 520; // in px
+    int blocksWidth = 22; // in % [1, 35]
+    int topBlocksHeight = 40; // in % [1, 50]
+    int bottomBlockHeight = 22; // in px
+    cv::Mat frame = cv::Mat(this->windowHeight, this->windowWidth, CV_8UC3); // windows size here
+    int widthBlocks = windowWidth * blocksWidth / 100;
 
     /* **** For checkpoint image saving **** */
     std::string imagePathName;
@@ -35,7 +41,7 @@ private:
     // Button & grid parameters & info-bulles list
     int buttonWidth = 40;
     int buttonHeight = 40;
-    int buttonsPerRow = 6;
+    int buttonsPerRow = widthBlocks / (topBlocksHeight+ 10);
     // Icon import
     std::vector<std::string> messagesBlock = {"Brightness", "Rotate", "Resize", "Crop", "Dilatation", "Erosion", "Canny edge", "Panorama"};
     std::vector<std::string> iconNameFileBlock = {"brightness", "rotate", "scissors", "crop", "dilatation", "erosion", "cannyEdge", "panorama"};
@@ -53,13 +59,13 @@ private:
     double blurredValue=0; double lowThreshold=0; double highThreshold=0;
 
     // to remove after import Image class
-    double count = 0; bool checked;
+    double count = 0; bool checked{};
 
     // add parameters pour resize facilement la window
 
 public:
     // constructors
-    explicit ImageApp();
+    ImageApp();
     bool openStarterImage(const std::string& imagePathName);
 
     // getters
@@ -72,6 +78,7 @@ public:
     void setOption(int newOption);
     void applyParameter(int parameter);
 
+
     // Blocks
     void topLeftBlock();
     void bottomLeftBlock();
@@ -80,6 +87,7 @@ public:
     void bottomBlock(cv::Point cursor);
 
     // Panels
+    void createPanelWindow(const std::string& title);
     void brightnessPanel();
     void rotatePanel();
     void resizePanel();
