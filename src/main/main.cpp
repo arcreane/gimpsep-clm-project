@@ -88,7 +88,7 @@ int run_application(const std::string& imagePathName) {
 }
 
 
-
+// Lucie main
 int main0() {
     std::string imagePath = "../src/ressources/HappyFish.jpg";
     std::string folderPath = "../src/ressources/stitching/";
