@@ -1,63 +1,67 @@
-// ISEP A2 - Multimedia Application
-// Final Project : gimpsep-clm-project
-// For the 09/06/2024.
-// https://github.com/arcreane/gimpsep-clm-project
-//
-// The project is to develop a small GIMP-like image editor, with basic functions.
-// The advantages of this project are:
-//     • the modularity
-//     • using image manipulation
-//     • adaptability
-
-#include <iostream>
+#include "Image.h"
+#include "PanoramaCreator.h"
+#include "ImageHandler.h"
 #include <string>
 
-// installation Clion: https://www.youtube.com/watch?v=fjq8eTuHnMM
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
+int main()
+{
+	std::string imagePath = "../src/ressources/HappyFish.jpg";
+	std::string folderPath = "../src/ressources/stitching/";
 
-using namespace std;
-using namespace cv;
+	Image img(imagePath);	
 
+    ImageHandler imgHandler(img);
+    imgHandler.Display();
 
-int main1();
-int main2();
-int working_test_openCV();
+    // Apply brightness adjustment
+    imgHandler.Brightness(50);
+    imgHandler.Display();
 
+    // Rotate the image by 45 degrees around the center
+    std::vector<int> centerPoints = { img.cols() / 2, img.rows() / 2 };
+    imgHandler.Rotate(45, centerPoints);
+    imgHandler.Display();
 
-int main(int args, char** argv) {
+    // Resize the image to half its size
+    imgHandler.Resize(2.5);
+    imgHandler.Display();
 
-    // Change the value to execute the right function
-    std::string i = "0";
-    if(args>1) {
-        i = argv[1];
-    }
+    // Crop the image to a central region
+    int startRow = 200;
+    int endRow = 600;
+    int startCol = 0;
+    int endCol = 3 * img.cols();
+    imgHandler.Crop(startRow, endRow, startCol, endCol);
+    imgHandler.Display();
 
-    if      (i=="1") {return main1();}
-    else if (i=="2") {return main2();}
-    else {return working_test_openCV();}
+    // Apply dilation
+    imgHandler.Dilatation(13);
+    imgHandler.Display();
+
+    // Apply erosion
+    imgHandler.Erosion(13);
+    imgHandler.Display();
+
+    // Undo the last operation (erosion)
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    // Rotate the image by 45 degrees around the center
+    imgHandler.Rotate(45, centerPoints);
+    imgHandler.Display();
+
+	PanoramaCreator myPano(folderPath);
+	Image panorama = myPano.CreatePanorama(myPano.getListImages());
+	panorama.Display();
+
+	return 0;
 }
-
-int main1() {
-    printf("hello world");
-    return 0;
-}
-
-int main2() {
-    printf("hello you");
-    return 0;
-}
-
-int working_test_openCV() {
-    string winName("Display window");
-    string imageName("../src/ressources/HappyFish.jpg");
-    Mat image;
-    image = imread(imageName, IMREAD_COLOR);
-    if (image.empty()) {std::cout << "Could not open or find the image" << std::endl;return -1;}
-    namedWindow(winName, WINDOW_AUTOSIZE);
-    imshow(winName, image);
-    waitKey(0);
-    return 0;
-}
-
