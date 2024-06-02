@@ -12,6 +12,8 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
+#include "Image.h"
+#include "ImageHandler.h"
 
 #define WINDOW_NAME "CVUI IMAGE TREATEMENT ISEP"
 enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE, PANORAMA}; // options
@@ -28,38 +30,40 @@ private:
     int blocksWidth = 22; // in % [1, 35]
     int topBlocksHeight = 40; // in % [1, 50]
     int bottomBlockHeight = 22; // in px
-    cv::Mat frame = cv::Mat(this->windowHeight, this->windowWidth, CV_8UC3); // windows size here
+    cv::Mat frame = cv::Mat(this->windowHeight, this->windowWidth, CV_8UC3);
     int widthBlocks = windowWidth * blocksWidth / 100;
 
     /* **** For checkpoint image saving **** */
     std::string imagePathName;
     std::string imageOutputPath = "../src/ressources/output.png";
-    cv::Mat imageSource, imageSave, imageView;
+    ImageHandler* image = nullptr;
+    int option = BRIGHTNESS;
 
     /* **** Block Variables **** */
-    int option = BRIGHTNESS;
     // Button & grid parameters & info-bulles list
     int buttonWidth = 40;
     int buttonHeight = 40;
     int buttonsPerRow = widthBlocks / (topBlocksHeight+ 10);
     // Icon import
-    std::vector<std::string> messagesBlock = {"Brightness", "Rotate", "Resize", "Crop", "Dilatation", "Erosion", "Canny edge", "Panorama"};
-    std::vector<std::string> iconNameFileBlock = {"brightness", "rotate", "scissors", "crop", "dilatation", "erosion", "cannyEdge", "panorama"};
+    std::vector<std::string> messagesBlock = {"Brightness", "Rotate", "Resize", "Crop", "Dilatation", "Erosion", "Canny edge"};
+    std::vector<std::string> iconNameFileBlock = {"brightness", "rotate", "resize", "crop", "dilatation", "erosion", "cannyEdge"};
     std::vector<std::vector<cv::Mat>> iconListBlock;
 
     /* **** Parameters Variables **** */
-    std::vector<std::string> messagesParameters = {"Save image", "New image", "Reset modifications"};
-    std::vector<std::string> iconNameFileParameters = {"save", "new", "reset"};
+    std::vector<std::string> messagesParameters = {"Save image", "New image", "Reset modifications", "Panorama"};
+    std::vector<std::string> iconNameFileParameters = {"save", "new", "reset", "panorama"};
     std::vector<std::vector<cv::Mat>> iconListParameters;
 
     /* **** Trackbar Panel Values **** */
-    double valueDilatation =0;
+    int lastAction = -1;
+    double valuebrightness = 0;
+    double valuePivot = 0; double centerPivotX = 0; double centerPivotY = 0;
+    double valueResize = 0; double maxValue; // revoir tous les valeurs par defaut
+    double startRowCrop = 0; double endRowCrop; double startColCrop = 0; double endColCrop;
+    double valueDilatation = 0;
     double valueErosion = 0;
-    double valuePivot = 0;
-    double blurredValue=0; double lowThreshold=0; double highThreshold=0;
+    double blurredValueCanny = 0; double lowThresholdCanny = 0; double highThresholdCanny = 0;
 
-    // to remove after import Image class
-    double count = 0; bool checked{};
 
     // add parameters pour resize facilement la window
 
@@ -68,15 +72,17 @@ public:
     ImageApp();
     bool openStarterImage(const std::string& imagePathName);
 
+    // Deconstructors
+    ~ImageApp();
+
     // getters
     cv::Mat& getFrame();
-    cv::Mat getImageSource();
-    cv::Mat getImageSave();
-    cv::Mat getImageView();
 
     // setters
     void setOption(int newOption);
     void applyParameter(int parameter);
+    void ControlZ();
+    void ControlY();
 
 
     // Blocks
@@ -88,6 +94,9 @@ public:
 
     // Panels
     void createPanelWindow(const std::string& title);
+    void setLastAction(int newLastAction);
+    void saveChanges();
+    void defaultValuesBtn();
     void brightnessPanel();
     void rotatePanel();
     void resizePanel();
@@ -101,7 +110,7 @@ public:
     void saveImage();
     void newImage();
     void resetImage();
-    void defaultValueBlock(double& trackbarVariable);
+    void defaultValues();
 };
 
 

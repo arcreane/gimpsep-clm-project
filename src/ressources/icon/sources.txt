@@ -9,9 +9,9 @@ ROTATE
 https://www.flaticon.com/free-icon/rotate_7693422
 
 RESIZE
-https://www.flaticon.com/free-icon/scissors_541957
-https://www.flaticon.com/free-icon/scissors_542578
-https://www.flaticon.com/free-icon/cut_98921
+https://www.flaticon.com/free-icon/resize_4211881
+https://www.flaticon.com/free-icon/resize_4211649
+https://www.flaticon.com/free-icon/resize_4620405
 
 CROP
 https://www.flaticon.com/free-icon/crop_4129730

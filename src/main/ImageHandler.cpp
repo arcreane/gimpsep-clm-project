@@ -6,51 +6,38 @@ using namespace std;
 using namespace cv;
 
 // Define the constructors
-ImageHandler::ImageHandler(Image image) : imageSource(image)
-	{
+ImageHandler::ImageHandler(Image image) : imageSource(image) {
 		imageList.push_back(imageSource);
 		current = imageList.begin();
-	}
+}
 
 
 // Define the methods
-void ImageHandler::Brightness(int brightnessFactor)
-{
+void ImageHandler::Brightness(int brightnessFactor) {
 	Save(current->Brightness(brightnessFactor));
 }
-
-void ImageHandler::Rotate(double rotationAngle, std::vector<int> centerPoints)
-{
+void ImageHandler::Rotate(double rotationAngle, std::vector<int> centerPoints) {
 	Save(current->Rotate(rotationAngle, centerPoints));
 }
-
-void ImageHandler::Resize(double scalingFactor)
-{
+void ImageHandler::Resize(double scalingFactor) {
 	Save(current->Resize(scalingFactor));
 }
-
-void ImageHandler::Crop(int startRow, int endRow, int startCol, int endCol)
-{
+void ImageHandler::Crop(int startRow, int endRow, int startCol, int endCol) {
 	Save(current->Crop(startRow, endRow, startCol, endCol));
 }
-
-void ImageHandler::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
-{
+void ImageHandler::CannyEdge(float blurredValue, int lowThreshold, int highThreshold) {
 	Save(current->CannyEdge(blurredValue, lowThreshold, highThreshold));
 }
-
-void ImageHandler::Dilatation(int SEsize)
-{
+void ImageHandler::Dilatation(int SEsize) {
 	Save(current->Dilatation(SEsize));
 }
-
-void ImageHandler::Erosion(int SEsize)
-{
+void ImageHandler::Erosion(int SEsize) {
 	Save(current->Erosion(SEsize));
 }
 
-void ImageHandler::Display()
-{
+
+
+void ImageHandler::Display() {
 	current->Display();
 }
 
@@ -98,7 +85,7 @@ void ImageHandler::ControlZ()
  **/
 void ImageHandler::ControlY()
 {
-	if (current != imageList.end())
+	if (current != imageList.end() && imageList.size() > 1)
 	{
 		current++;
     	cout << "Redo successful." << endl;
@@ -108,3 +95,16 @@ void ImageHandler::ControlY()
         cout << "Already at the latest image." << endl;
     }
 }
+
+
+Image ImageHandler::getCurrentImage() {
+    return static_cast<Image &>(*current);
+}
+
+
+Image ImageHandler::getSourceImage() {
+    return imageSource;
+}
+
+
+

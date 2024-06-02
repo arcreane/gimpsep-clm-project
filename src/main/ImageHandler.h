@@ -34,9 +34,12 @@ public:
 	void Erosion(int SEsize);
 
 	void Save(const Image& imageToSave);
-	void Display();
+	void Display(); // not used
 	void ControlZ();
 	void ControlY();
+
+    Image getCurrentImage();
+    Image getSourceImage();
 
 	
 };

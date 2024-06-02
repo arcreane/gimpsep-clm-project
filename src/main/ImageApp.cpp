@@ -46,7 +46,8 @@ ImageApp::ImageApp() {
 
 bool ImageApp::openStarterImage(const std::string& imagePath) {
     this->imagePathName = imagePath;
-    this->imageSource = cv::imread(this->imagePathName);
+    Image img = Image(this->imagePathName);
+    this->image = new ImageHandler(img);
     /*
      * pas de controle d'image, cette partie sera modifié pour imlémentation de la class image qui gerera ce cas
      * ImageApp n'aura qu'un contructeur par défaut
@@ -54,10 +55,20 @@ bool ImageApp::openStarterImage(const std::string& imagePath) {
      * On peut run l'executable avec un paramete imagePath pour ne pas avoir ce popup à l'ouverture
      * if error return false ou ouvre le popup
      */
-    this->imageSave = this->imageSource.clone();
-    this->imageView = this->imageSource.clone();
+
+    this->defaultValues();
+
     return true;
 }
+
+/* ************************************************* */
+/* Deconstructors */
+/* ************************************************* */
+
+ImageApp::~ImageApp() {
+    delete image;
+}
+
 
 
 /* ************************************************* */
@@ -70,17 +81,6 @@ cv::Mat& ImageApp::getFrame() {
 
 
 
-cv::Mat ImageApp::getImageSource() {
-    return this->imageSource;
-}
-
-cv::Mat ImageApp::getImageSave() {
-    return this->imageSave;
-}
-
-cv::Mat ImageApp::getImageView() {
-    return this->imageView;
-}
 
 
 
@@ -89,7 +89,7 @@ cv::Mat ImageApp::getImageView() {
 /* ************************************************* */
 void ImageApp::setOption(int newOption) {
     if (this->option != newOption) {
-        this->imageSave = this->imageView.clone();
+        //this->imageSave0 = this->imageView0.clone();
         this->option = newOption;
     }
 
@@ -101,7 +101,14 @@ void ImageApp::applyParameter(int parameter) {
         case NEW: newImage(); break;
         case RESET: resetImage(); break;
     }
+}
 
+void ImageApp::ControlZ() {
+    this->image->ControlZ();
+}
+
+void ImageApp::ControlY() {
+    this->image->ControlY();
 }
 
 
@@ -114,7 +121,6 @@ void ImageApp::topLeftBlock() {
     int height = windowHeight * topBlocksHeight / 100;
     int x = 0; int y = 0;
     cvui::window(this->frame, x, y, widthBlocks, height, "Options");
-
     // Button creation
     for (int i = 0; i < this->messagesBlock.size(); i++) {
         int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + 5;
@@ -150,11 +156,10 @@ void ImageApp::bottomLeftBlock() {
 
 void ImageApp::centerBlock() {
     // resize image pour que sa taille soit fixe sur l'ecran si taille trop grande
-    // centrer image
-    // cvui::window(frame, 300, 0, 300, 400, "Image");
-    int x = (windowWidth / 2) - (this->imageSave.cols / 2);
-    int y = (windowHeight / 2) - (this->imageSave.rows / 2);
-    cvui::image(this->frame, x, y, this->imageView);
+    cv::Mat img = this->image->getCurrentImage().getImage();
+    int x = (windowWidth / 2) - (img.cols / 2);
+    int y = (windowHeight / 2) - (img.rows / 2);
+    cvui::image(this->frame, x, y, img);
 }
 
 void ImageApp::topRightBlock() {
@@ -186,10 +191,11 @@ void ImageApp::topRightBlock() {
 }
 
 void ImageApp::bottomBlock(cv::Point cursor) {
+    Image img = this->image->getCurrentImage();
     int y = windowHeight-bottomBlockHeight;
     cvui::rect(frame, 0, y, windowWidth+5, bottomBlockHeight, 0x4a4a4a, 0x313131);
     cvui::beginRow(this->frame, 5, y+5, -1, -1, 50);
-    cvui::printf(0.4, 0xffffff, "image size: cols = %d rows = %d", this->imageSave.cols, this->imageSave.rows);
+    cvui::printf(0.4, 0xffffff, "image size: cols = %d rows = %d", img.cols(), img.rows());
     cvui::printf(0.4, 0xffffff, "cursor: x = %d y = %d", cursor.x, cursor.y);
     cvui::endRow();
 }
@@ -202,71 +208,132 @@ void ImageApp::createPanelWindow(const std::string& title) {
     int x = 0;
     int y = windowHeight * topBlocksHeight / 100;
     int height = windowHeight - y;
-
     cvui::window(this->frame, x, y, widthBlocks, height, title);
     cvui::beginColumn(this->frame, x, y+20, widthBlocks, height, 10);
 }
 
+void ImageApp::setLastAction(int newLastAction) {
+    if (this->lastAction != newLastAction) {
+        this->lastAction = newLastAction;
+    }
+    else if (newLastAction == -1) {return;}
+    else {this->image->ControlZ();}
+}
+
+void ImageApp::saveChanges() {
+    if (cvui::button("Save changes")) {
+        this->image->Save(this->image->getCurrentImage());
+    }
+}
+
+void ImageApp::defaultValuesBtn() {
+    int x = widthBlocks / 2 - 35;
+    int y = windowHeight - bottomBlockHeight - 35;
+    if (cvui::button(this->frame, x, y, "Default")) {
+        this->defaultValues();
+    }
+}
+
+
 void ImageApp::brightnessPanel() {
-    this->createPanelWindow("Rotate Panel");
-    cvui::checkbox( "Checkbox label", &checked);
+    this->createPanelWindow("Brightness Panel");
+    if (cvui::trackbar(widthBlocks, &this->valuebrightness, (double)-180, (double)180)) {
+        setLastAction(BRIGHTNESS);
+        this->image->Brightness((int) valuebrightness);
+    }
+    this->saveChanges();
+    this->defaultValuesBtn();
     cvui::endColumn();
 }
 
+
 void ImageApp::rotatePanel() {
     this->createPanelWindow("Rotate Panel");
-    if (cvui::trackbar(widthBlocks, &this->valuePivot, (double)-180, (double)180)) {
-        // action sur image
-        cv::Point2f center((float)this->imageSave.cols/2, (float)this->imageSave.rows/2);
-        cv::Mat RotationMatrix = getRotationMatrix2D(center, this->valuePivot, 1);
-        warpAffine(this->imageSave, this->imageView, RotationMatrix, this->imageSave.size());
+    cv::Mat img = this->image->getCurrentImage().getImage();
+    if (cvui::trackbar(this->widthBlocks, &this->valuePivot, (double)-180, (double)180)) {
+        setLastAction(ROTATE);
+        this->image->Rotate((int) this->valuePivot, {(int) this->centerPivotX, (int) this->centerPivotY});
     }
-    this->defaultValueBlock(valuePivot);
+    cvui::trackbar(this->widthBlocks, &this->centerPivotX, (double)0, (double)img.cols);
+    cvui::trackbar(this->widthBlocks, &this->centerPivotY, (double)0, (double)img.rows);
+    int x = (windowWidth / 2) - (img.cols / 2);
+    int y = (windowHeight / 2) - (img.rows / 2);
+    cvui::rect(frame, centerPivotX+x-5, centerPivotY+y-5, 10, 10, 0xff0000);
+    this->saveChanges();
+    this->defaultValuesBtn();
     cvui::endColumn();
 }
 
 void ImageApp::resizePanel() {
     this->createPanelWindow("Resize Panel");
-    cvui::counter(&count);
-    this->defaultValueBlock(count);
+    if (cvui::trackbar(this->widthBlocks, &this->valueResize, (double)0.1, maxValue)) {
+        setLastAction(RESIZE);
+        this->image->Resize(this->valueResize);
+    }
+    this->defaultValuesBtn();
     cvui::endColumn();
 }
 
 void ImageApp::cropPanel() {
     this->createPanelWindow("Crop Panel");
+    cv::Mat img = this->image->getCurrentImage().getImage();
+    cvui::trackbar(this->widthBlocks, &this->startColCrop, (double)0, (double)img.cols);
+    cvui::trackbar(this->widthBlocks, &this->endColCrop, (double)startColCrop+1, (double)img.cols);
+    cvui::trackbar(this->widthBlocks, &this->startRowCrop, (double)0, (double)img.rows);
+    cvui::trackbar(this->widthBlocks, &this->endRowCrop, (double)startRowCrop+1, (double)img.rows);
+    int x = (this->windowWidth / 2) - (img.cols / 2);
+    int y = (this->windowHeight / 2) - (img.rows / 2);
+    cvui::rect(frame, x+startColCrop, startRowCrop+y, endColCrop-startColCrop, endRowCrop-startRowCrop, 0xff0000);
+    if (cvui::button("Apply")) {
+        this->image->Crop(startRowCrop, endRowCrop, startColCrop, endColCrop);
+        Image imgCropped = this->image->getCurrentImage();
+        startColCrop = 0;
+        startRowCrop = 0;
+        this->endColCrop = imgCropped.cols();
+        this->endRowCrop = imgCropped.rows();
+        setLastAction(-1);
+    }
+    this->defaultValuesBtn();
     cvui::endColumn();
 }
 
 void ImageApp::dilatationPanel() {
     this->createPanelWindow("Dilatation Panel");
-    if (cvui::trackbar(widthBlocks, &valueDilatation, (double)1.0, (double)100.0)) {
-        cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((int)valueDilatation, (int)valueDilatation), cv::Point(-1, -1));
-        cv::dilate(this->imageSave, this->imageView,element, cv::Point(-1, -1), 1);
+    if (cvui::trackbar(widthBlocks, &this->valueDilatation, (double)1.0, (double)100.0)) {
+        setLastAction(DILATATION);
+        this->image->Dilatation((int) valueDilatation);
     }
-    this->defaultValueBlock(valueDilatation);
+    this->defaultValuesBtn();
     cvui::endColumn();
 }
 
 void ImageApp::erosionPanel() {
     this->createPanelWindow("Erosion Panel");
-    if (cvui::trackbar(widthBlocks, &valueErosion, (double)1.0, (double)100.0)) {
-        cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((int)valueErosion, (int)valueErosion), cv::Point(-1, -1));
-        cv::erode(this->imageSave, this->imageView,element, cv::Point(-1, -1), 1);
+    if (cvui::trackbar(widthBlocks, &this->valueErosion, (double)1.0, (double)100.0)) {
+        setLastAction(EROSION);
+        this->image->Erosion((int) valueErosion);
     }
-    this->defaultValueBlock(valueErosion);
+    this->defaultValuesBtn();
     cvui::endColumn();
 }
 
 void ImageApp::cannyEdgePanel() {
     this->createPanelWindow("Canny Edge Panel");
-    if (cvui::trackbar(widthBlocks, &this->blurredValue, (double)0.0, (double)10.0)) {}
-    cvui::trackbar(widthBlocks, &this->lowThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
-    cvui::trackbar(widthBlocks, &this->highThreshold, (double)0, (double)200, 1, "%.0Lf", cvui::TRACKBAR_DISCRETE, 1.0);
+    cvui::trackbar(this->widthBlocks, &this->blurredValueCanny, (double)0, (double)100.0);
+    cvui::trackbar(this->widthBlocks, &this->lowThresholdCanny, (double)0, (double)100.0);
+    cvui::trackbar(this->widthBlocks, &this->highThresholdCanny, (double)0, (double)100.0);
+    if (cvui::button("Apply")) {
+        std::cout << "Not implemented" << std::endl;
+        //setLastAction(-1);
+        //this->image->CannyEdge((float) blurredValueCanny, (int) lowThresholdCanny, (int) highThresholdCanny);
+    }
+    this->defaultValuesBtn();
     cvui::endColumn();
 }
 
 void ImageApp::panoramaPanel() {
     this->createPanelWindow("Panorama Panel");
+    std::cout << "Not implemented" << std::endl;
     cvui::endColumn();
 }
 
@@ -278,24 +345,34 @@ void ImageApp::panoramaPanel() {
 
 void ImageApp::saveImage() {
     // need to read the imagePath exension to save in the right format
-    imwrite (this->imageOutputPath, this->imageView);
+    imwrite (this->imageOutputPath, this->image->getCurrentImage().getImage());
 }
 void ImageApp::newImage() {
-    system("explorer");
+    //system("explorer");
+    std::cout << "Not implemented" << std::endl;
 }
 void ImageApp::resetImage() {
-    this->imageView = this->imageSource.clone();
-    this->imageSave = this->imageSource.clone();
-    // Reset Trackbar Panel Values
-    this->valueDilatation =0;
-    this->valueErosion = 0;
-    this->valuePivot = 0;
-    this->blurredValue=0; this->lowThreshold=0; this->highThreshold=0;
+    this->image->Save(this->image->getSourceImage());
+    this->defaultValues();
 }
 
-void ImageApp::defaultValueBlock(double& trackbarVariable) {
-    if (cvui::button(this->frame, 112, 460, "Default")) {
-        trackbarVariable = 1;
-        this->imageView = this->imageSave.clone();
-    }
+void ImageApp::defaultValues() {
+    cv::Mat img = this->image->getCurrentImage().getImage();
+    // revoir tous les valeurs par defaut
+    valuebrightness = 0;
+    valuePivot = 0; centerPivotX = 0; centerPivotY = 0;
+    valueResize = 0;
+    startRowCrop = 0; startColCrop = 0;
+    valueDilatation = 0;
+    valueErosion = 0;
+
+    // ROTATE PART
+    centerPivotX = img.cols / 2;
+    centerPivotY = img.rows/ 2;
+    // CROP
+    endColCrop = img.cols;
+    endRowCrop = img.rows;
+    // RESIZE
+    maxValue = std::min(windowWidth / img.cols, windowHeight / img.rows);
 }
+

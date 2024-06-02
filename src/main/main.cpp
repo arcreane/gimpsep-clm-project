@@ -73,9 +73,9 @@ int run_application(const std::string& imagePathName) {
         myApp.getFrame() = cv::Scalar(49, 52, 49);
         cv::Point cursor = cvui::mouse();
         //---------------------------------------------------//
+        myApp.centerBlock();
         myApp.topLeftBlock();
         myApp.bottomLeftBlock();
-        myApp.centerBlock();
         myApp.topRightBlock();
         myApp.bottomBlock(cursor);
         //---------------------------------------------------//
@@ -83,6 +83,8 @@ int run_application(const std::string& imagePathName) {
         cvui::imshow(WINDOW_NAME, myApp.getFrame());
         char key = (char)cv::waitKey(20);
         if (key  == 27 || cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_VISIBLE) < 1) {break;}
+        if (key  == 26) {std::cout << "ctrl+z clic" << std::endl;myApp.ControlZ();}
+        if (key  == 25) {std::cout << "ctrl+y clic" << std::endl;myApp.ControlY();}
     }
     return 0;
 }
