@@ -43,7 +43,8 @@ int main(int args, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_WARNING);
 
     // if imagePath in parameter
-    std::string imagePath = "../src/ressources/HappyFish.jpg";
+    //std::string imagePath = "../src/ressources/HappyFish.jpg";
+    std::string imagePath = "../src/ressources/chaplin.mp4";
     if(args>1) {imagePath = argv[1];}
 
     // run the gui application
@@ -63,8 +64,12 @@ int run_application(const std::string& imagePathName) {
         // popup
     }
     // load the image in the application
-    if (!myApp.openStarterImage(imagePathName)){
+    if (!myApp.isVideoFile(imagePathName) && !myApp.openStarterImage(imagePathName)){
         std::cout << "Error : cannot open your image" << std::endl;
+        return -1; // if error open image then popup error [close or choose new image]
+    }
+    else if (myApp.isVideoFile(imagePathName) && !myApp.openVideo(imagePathName)){
+        std::cout << "Error : cannot open your video" << std::endl;
         return -1; // if error open image then popup error [close or choose new image]
     }
 
@@ -73,11 +78,17 @@ int run_application(const std::string& imagePathName) {
         myApp.getFrame() = cv::Scalar(49, 52, 49);
         cv::Point cursor = cvui::mouse();
         //---------------------------------------------------//
+        if (myApp.getIsVideo() && myApp.getIsVideoRunning()) {
+            myApp.showVideo();
+        }
         myApp.centerBlock();
-        myApp.topLeftBlock();
-        myApp.bottomLeftBlock();
+        if (!myApp.getIsVideoRunning()) {
+            myApp.topLeftBlock();
+            myApp.bottomLeftBlock();
+        }
         myApp.topRightBlock();
         myApp.bottomBlock(cursor);
+
         //---------------------------------------------------//
         cvui::update();
         cvui::imshow(WINDOW_NAME, myApp.getFrame());

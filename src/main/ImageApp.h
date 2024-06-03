@@ -6,6 +6,9 @@
 
 #include <iostream>
 #include <string>
+#include <filesystem>
+#include <unordered_set>
+
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/utils/logger.hpp>
@@ -14,11 +17,12 @@
 
 #include "Image.h"
 #include "ImageHandler.h"
+#include "PanoramaCreator.h"
 
 #define WINDOW_NAME "CVUI IMAGE TREATEMENT ISEP"
-enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE, PANORAMA}; // options
+enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE}; // options
 enum {IDLE, OVER, DOWN}; // imageStates
-enum {SAVE, NEW, RESET}; // imageParameters
+enum {SAVE, NEW, RESET, PANORAMA, CAPTUREVIDEO}; // imageParameters
 
 
 class ImageApp {
@@ -35,7 +39,8 @@ private:
 
     /* **** For checkpoint image saving **** */
     std::string imagePathName;
-    std::string imageOutputPath = "../src/ressources/output.png";
+    std::string fileExtension;
+    std::string imageOutputPath = "../src/ressources/output";
     ImageHandler* image = nullptr;
     int option = BRIGHTNESS;
 
@@ -50,8 +55,8 @@ private:
     std::vector<std::vector<cv::Mat>> iconListBlock;
 
     /* **** Parameters Variables **** */
-    std::vector<std::string> messagesParameters = {"Save image", "New image", "Reset modifications", "Panorama"};
-    std::vector<std::string> iconNameFileParameters = {"save", "new", "reset", "panorama"};
+    std::vector<std::string> messagesParameters = {"Save image", "New image", "Reset modifications", "Panorama", "Capture Video"};
+    std::vector<std::string> iconNameFileParameters = {"save", "new", "reset", "panorama", "captureVideo"};
     std::vector<std::vector<cv::Mat>> iconListParameters;
 
     /* **** Trackbar Panel Values **** */
@@ -65,12 +70,25 @@ private:
     double blurredValueCanny = 0; double lowThresholdCanny = 0; double highThresholdCanny = 0;
 
 
-    // add parameters pour resize facilement la window
+    /* **** Video **** */
+    const std::unordered_set<std::string> videoExtensions = {".mp4", ".avi"};
+    bool isVideo = false;
+    bool isVideoRunning = false;
+    cv::VideoCapture cap;
+    int positionVideo = 0;
+    int frameCount  = 0;
+    int fps  = 0;
+    int videoLength;
+    bool isVideoCapture;
+
+
 
 public:
     // constructors
     ImageApp();
     bool openStarterImage(const std::string& imagePathName);
+    bool openVideo(const std::string& imagePathName);
+    bool openVideo();
 
     // Deconstructors
     ~ImageApp();
@@ -111,6 +129,14 @@ public:
     void newImage();
     void resetImage();
     void defaultValues();
+
+    // Video
+    bool isVideoFile(std::string filename);
+    void showVideo();
+    void videoPanel();
+    bool getIsVideo();
+    bool getIsVideoRunning();
+    void captureVideoPanel();
 };
 
 

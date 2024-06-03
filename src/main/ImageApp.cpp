@@ -47,7 +47,11 @@ ImageApp::ImageApp() {
 bool ImageApp::openStarterImage(const std::string& imagePath) {
     this->imagePathName = imagePath;
     Image img = Image(this->imagePathName);
-    this->image = new ImageHandler(img);
+    if (image == nullptr) {this->image = new ImageHandler(img);}
+    else {image->Save(img);}
+    fileExtension = std::filesystem::path(imagePath).extension().string();
+    isVideo = false;
+    isVideoRunning = false;
     /*
      * pas de controle d'image, cette partie sera modifié pour imlémentation de la class image qui gerera ce cas
      * ImageApp n'aura qu'un contructeur par défaut
@@ -55,9 +59,57 @@ bool ImageApp::openStarterImage(const std::string& imagePath) {
      * On peut run l'executable avec un paramete imagePath pour ne pas avoir ce popup à l'ouverture
      * if error return false ou ouvre le popup
      */
+    this->defaultValues();
+    return true;
+}
+
+bool ImageApp::openVideo(const std::string& imagePath) {
+    // close the last video
+    if (cap.isOpened()) {cap.release();}
+    // open the new video
+    this->imagePathName = imagePath;
+    fileExtension = std::filesystem::path(imagePath).extension().string();
+    isVideo = true;
+    isVideoRunning = true;
+    cap.open(imagePath);
+    if(!cap.isOpened()){return false;}
+
+    frameCount = cap.get(cv::CAP_PROP_FRAME_COUNT);
+    fps = cap.get(cv::CAP_PROP_FPS);
+    videoLength = frameCount / fps;
+
+    cv::Mat frameVideo;
+    cap >> frameVideo;
+    Image img = Image(frameVideo);
+    if (image == nullptr) {this->image = new ImageHandler(img);}
+    else {image->Save(img);}
+    isVideoCapture = true;
 
     this->defaultValues();
+    return true;
+}
 
+bool ImageApp::openVideo() {
+    // close the last video
+    if (cap.isOpened()) {cap.release();}
+    // open the new video
+    this->imagePathName = imageOutputPath +"_camera.avi";
+    fileExtension = std::filesystem::path(imagePathName).extension().string();
+    isVideo = true;
+    isVideoRunning = true;
+    cap.open(0);
+    if(!cap.isOpened()){return false;}
+    isVideoCapture = false;
+
+
+
+    cv::Mat frameVideo;
+    cap >> frameVideo;
+    Image img = Image(frameVideo);
+    if (image == nullptr) {this->image = new ImageHandler(img);}
+    else {image->Save(img);}
+
+    this->defaultValues();
     return true;
 }
 
@@ -67,6 +119,11 @@ bool ImageApp::openStarterImage(const std::string& imagePath) {
 
 ImageApp::~ImageApp() {
     delete image;
+
+    if (isVideo) {
+        cap.release();
+        cv::destroyAllWindows();
+    }
 }
 
 
@@ -100,6 +157,8 @@ void ImageApp::applyParameter(int parameter) {
         case SAVE: saveImage(); break;
         case NEW: newImage(); break;
         case RESET: resetImage(); break;
+        case PANORAMA: panoramaPanel(); break;
+        case CAPTUREVIDEO: captureVideoPanel(); break;
     }
 }
 
@@ -150,7 +209,6 @@ void ImageApp::bottomLeftBlock() {
         case DILATATION: dilatationPanel(); break;
         case EROSION: erosionPanel(); break;
         case CANNY_EDGE: cannyEdgePanel(); break;
-        case PANORAMA: panoramaPanel(); break;
     }
 }
 
@@ -166,10 +224,15 @@ void ImageApp::topRightBlock() {
     int height = windowHeight * topBlocksHeight / 100;
     int xW = windowWidth - widthBlocks;
     int yW = 0;
-    cvui::window(this->frame, xW, yW, widthBlocks, height, "Parameters"); // if image
-    /*cvui::window(this->frame, 600, 0, 300, 200, "Parameters");
-    cvui::window(this->frame, 600, 200, 300, 200, "Others Parameters");*/ // if vidéo
-
+    if (isVideo) {
+        cvui::window(this->frame, xW, yW, widthBlocks, height, "Parameters");
+        cvui::window(this->frame, xW, height, widthBlocks, windowHeight-height, "Video Panel");
+        cvui::beginColumn(this->frame, xW, height+20, widthBlocks, windowHeight-height);
+        this->videoPanel();
+    }
+    else{
+        cvui::window(this->frame, xW, yW, widthBlocks, windowHeight, "Parameters");
+    }
     // Button creation
     for (int i = 0; i < this->messagesParameters.size(); i++) {
         int x = (i % this->buttonsPerRow) * (this->buttonWidth + 10) + xW + 5;
@@ -185,7 +248,7 @@ void ImageApp::topRightBlock() {
         cv::Point mouse = cvui::mouse();
         cv::Rect buttonRect(x, y, this->buttonWidth, this->buttonHeight);
         if (buttonRect.contains(mouse)) {
-            cvui::printf(this->frame, mouse.x, mouse.y - 20, 0.4, 0xeeeeee, this->messagesParameters[i].c_str());
+            cvui::printf(this->frame, mouse.x - 60, mouse.y - 20, 0.4, 0xeeeeee, this->messagesParameters[i].c_str());
         }
     }
 }
@@ -197,6 +260,7 @@ void ImageApp::bottomBlock(cv::Point cursor) {
     cvui::beginRow(this->frame, 5, y+5, -1, -1, 50);
     cvui::printf(0.4, 0xffffff, "image size: cols = %d rows = %d", img.cols(), img.rows());
     cvui::printf(0.4, 0xffffff, "cursor: x = %d y = %d", cursor.x, cursor.y);
+    cvui::text(this->fileExtension, 0.4, 0xffffff);
     cvui::endRow();
 }
 
@@ -332,9 +396,17 @@ void ImageApp::cannyEdgePanel() {
 }
 
 void ImageApp::panoramaPanel() {
-    this->createPanelWindow("Panorama Panel");
-    std::cout << "Not implemented" << std::endl;
-    cvui::endColumn();
+    std::cout << "Folder choosing are not implemented" << std::endl;
+
+    this->imagePathName = iconFolder+"../stitching/";
+    PanoramaCreator myPano(this->imagePathName);
+    Image panorama = myPano.CreatePanorama(myPano.getListImages());
+    this->image->Save(panorama);
+    this->defaultValues();
+    // change this->image->imageSource
+    isVideo = false;
+    isVideoRunning = false;
+    fileExtension = ".png";
 }
 
 
@@ -345,11 +417,19 @@ void ImageApp::panoramaPanel() {
 
 void ImageApp::saveImage() {
     // need to read the imagePath exension to save in the right format
-    imwrite (this->imageOutputPath, this->image->getCurrentImage().getImage());
+    if (videoExtensions.find(fileExtension) != videoExtensions.end()) { // video
+        std::cout << "Video save not implemented. The screen hase beeen saved" << std::endl;
+        imwrite (this->imageOutputPath + ".png", this->image->getCurrentImage().getImage());
+
+    }
+    else { // imaage
+        imwrite (this->imageOutputPath + this->fileExtension, this->image->getCurrentImage().getImage());
+
+    }
 }
 void ImageApp::newImage() {
     //system("explorer");
-    std::cout << "Not implemented" << std::endl;
+    openStarterImage("../src/ressources/HappyFish.jpg");
 }
 void ImageApp::resetImage() {
     this->image->Save(this->image->getSourceImage());
@@ -374,5 +454,62 @@ void ImageApp::defaultValues() {
     endRowCrop = img.rows;
     // RESIZE
     maxValue = std::min(windowWidth / img.cols, windowHeight / img.rows);
+}
+
+
+
+/* ************************************************* */
+/* Video */
+/* ************************************************* */
+
+bool ImageApp::isVideoFile(std::string filename) {
+    std::string extension = std::filesystem::path(filename).extension().string();
+    if (videoExtensions.find(extension) != videoExtensions.end()) {
+        return true;}
+    return false;
+
+}
+
+void ImageApp::showVideo() {
+    cv::Mat frameVideo;
+    // Capture frame-by-frame
+    positionVideo++;
+    cap >> frameVideo;
+    // If the frame is empty, reset video to beginning
+    if (frameVideo.empty()) {
+        //isVideoRunning = false;
+        cap.set(cv::CAP_PROP_POS_FRAMES, 0);
+        cap >> frameVideo;
+        positionVideo = 0;
+    }
+    else {
+        Image img = Image(frameVideo);
+        image->Save(img);
+    }
+}
+
+
+void ImageApp::videoPanel() {
+    cvui::checkbox("run", &isVideoRunning);
+    if (isVideoCapture) {
+        if (cvui::trackbar(widthBlocks, &positionVideo, 0, frameCount)) {
+            cap.set(cv::CAP_PROP_POS_FRAMES, positionVideo);
+            this->showVideo();
+        }
+    }
+
+
+    cvui::endColumn();
+}
+
+bool ImageApp::getIsVideo() {
+    return isVideo;
+}
+bool ImageApp::getIsVideoRunning() {
+    return isVideoRunning;
+}
+
+void ImageApp::captureVideoPanel() {
+    this->openVideo();
 }
 
