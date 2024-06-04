@@ -84,6 +84,18 @@ Image Image::Resize(double scalingFactor)
  **/ 
 Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
 {
+    if (startRow > endRow)
+    {
+        int tmpEndRow = endRow;
+        endRow =  startRow;
+        startRow = tmpEndRow;
+    }
+    if (startCol > endRow)
+    {
+        int tmpEndCol = endCol;
+        endCol =  startCol;
+        startCol = tmpEndCol;
+    }
     if (endRow > m_imageSource.rows || endRow < startRow)
         endRow = m_imageSource.rows;
     if (endCol > m_imageSource.cols || endCol < startCol)
@@ -92,6 +104,7 @@ Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
         startRow = 0;
     if (startCol < 0)
         startCol = 0;
+
     Mat tmp = m_imageSource(Range(startRow, endRow), Range(startCol, endCol));
     return Image(tmp);
 }
@@ -106,6 +119,10 @@ Image Image::Crop(int startRow, int endRow, int startCol, int endCol)
 Image Image::CannyEdge(float blurredValue, int lowThreshold, int highThreshold)
 {
     Mat imageEdges, blurredImage;
+    if (highThreshold < lowThreshold)
+    {
+        highThreshold = lowThreshold;
+    }
  	GaussianBlur(m_imageSource, blurredImage,Size(5, 5), blurredValue); 
     Canny(blurredImage, imageEdges,lowThreshold,highThreshold);
     return Image(imageEdges);

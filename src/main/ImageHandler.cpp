@@ -98,7 +98,7 @@ void ImageHandler::ControlZ()
  **/
 void ImageHandler::ControlY()
 {
-	if (current != imageList.end())
+	if (current != imageList.end()-1)
 	{
 		current++;
     	cout << "Redo successful." << endl;
