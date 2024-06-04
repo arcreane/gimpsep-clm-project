@@ -418,9 +418,16 @@ void ImageApp::cannyEdgePanel() {
 }
 
 void ImageApp::panoramaPanel() {
-    std::cout << "Folder choosing are not implemented" << std::endl;
+    std::string folderPath = tinyfd_selectFolderDialog("Choose a folder for the panorama", "C:\\");
 
-    this->imagePathName = iconFolder+"../stitching/";
+    if (folderPath.empty()) {
+        std::cout << "User closed the dialog without selecting a folder." << std::endl;
+        return;
+    }
+
+    std::cout << folderPath << std::endl;
+
+    this->imagePathName = folderPath + "/";
     PanoramaCreator myPano(this->imagePathName);
     Image panorama = myPano.CreatePanorama(myPano.getListImages());
     this->image->Save(panorama);
@@ -433,26 +440,43 @@ void ImageApp::panoramaPanel() {
 
 
 
+
 /* ************************************************* */
 /* Parameters */
 /* ************************************************* */
 
 void ImageApp::saveImage() {
-    // need to read the imagePath exension to save in the right format
+    // need to read the imagePath extension to save in the right format
+    char const * lFilterPatterns[6] = {  "*.jpg", "*.png", "*.jpeg", "*.jpe" , "*.mp4", "*.avi" };
+    std::string outputPath = tinyfd_saveFileDialog(
+            "Save file | Please do not select file with accent",
+            "C:\\",
+            6,
+            lFilterPatterns,
+            NULL
+    );
+
+    if (outputPath.empty()) {
+        std::cout << "User closed the dialog without selecting a file." << std::endl;
+        return;
+    }
+
+    std::string fileExtension = outputPath.substr(outputPath.find_last_of('.'));
+
     if (videoExtensions.find(fileExtension) != videoExtensions.end()) { // video
         std::cout << "Video save not implemented. The screen hase beeen saved" << std::endl;
-        imwrite (this->imageOutputPath + ".png", this->image->getCurrentImage().getImage());
+        imwrite (outputPath  + ".png", this->image->getCurrentImage().getImage());
 
     }
     else { // imaage
-        imwrite (this->imageOutputPath + this->fileExtension, this->image->getCurrentImage().getImage());
+        imwrite (outputPath , this->image->getCurrentImage().getImage());
 
     }
 }
 
 void ImageApp::newImage() {
     char const * lFilterPatterns[6] = {  "*.jpg", "*.png", "*.jpeg", "*.jpe" , "*.mp4", "*.avi" };
-    std::string selection = tinyfd_openFileDialog(
+    std::string inputPath = tinyfd_openFileDialog(
             "Select file | Please do not select file with accent",
             "C:\\",
             6,
@@ -461,23 +485,23 @@ void ImageApp::newImage() {
             0
     );
 
-    std::cout << selection << std::endl;
+    std::cout << inputPath << std::endl;
 
-    if (has_accents(selection)) {
+    if (has_accents(inputPath)) {
         std::cout << "Please do not use file with accent" << std::endl;
         newImage(); // Call newImage() recursively to select a new file
         return;
     }
 
-    if (isVideoFile(selection)) {
+    if (isVideoFile(inputPath)) {
         // Call video opening method
-        if (!openVideo(selection)) {
+        if (!openVideo(inputPath)) {
             std::cout << "Error during video opening, please select new video" << std::endl;
             newImage(); // Call newImage() recursively to select a new file
         }
     } else {
         // Call img opening method
-        openStarterImage(selection);
+        openStarterImage(inputPath);
     }
 }
 
