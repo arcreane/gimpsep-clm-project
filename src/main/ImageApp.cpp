@@ -485,8 +485,7 @@ void ImageApp::defaultValues() {
     startRowCrop = 0; startColCrop = 0; endColCrop = img.cols; endRowCrop = img.rows;
     valueDilatation = 1;
     valueErosion = 1;
-
-
+    blurredValueCanny = 0; lowThresholdCanny = 0; highThresholdCanny = 0;
 }
 
 
