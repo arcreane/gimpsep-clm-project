@@ -2,7 +2,11 @@
 /.idea/
 /cmake-build-debug/
 /CMakeLists.txt
+/Makefile
 
 # Visual Studio
 
 # Linux
+obj/main
+bin/
+

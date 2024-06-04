@@ -2,6 +2,57 @@ src/main/main.cpp
 
 
 LINUX :
+# Compiler and flags
+CC = g++
+CFLAGS = -Wall -std=c++17
+
+# Directories
+SRCDIR = src
+BINDIR = bin
+OBJDIR = obj
+LIBDIR = $(SRCDIR)/lib  # Directory containing the cvui.h file
+
+# OpenCV include and library flags
+OPENCV_INCLUDE = -I/usr/include/opencv4
+OPENCV_LIBS = -L/usr/lib/x86_64-linux-gnu -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_videoio -lopencv_stitching
+
+# Custom library
+CUSTOM_LIB_INCLUDE = -I$(LIBDIR)  # Include directory for cvui.h
+
+# Source files
+SRCS = $(wildcard $(SRCDIR)/*.cpp) $(wildcard $(SRCDIR)/main/*.cpp)
+
+# Object files
+OBJS = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))
+
+# Target binary
+TARGET = $(BINDIR)/main
+
+# Targets
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	@mkdir -p $(BINDIR)
+	$(CC) -o $@ $^ $(OPENCV_LIBS)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@ $(OPENCV_INCLUDE) $(CUSTOM_LIB_INCLUDE)
+
+clean:
+	@rm -rf $(OBJDIR) $(BINDIR)
+
+# Automatic dependency generation
+-include $(OBJS:.o=.d)
+
+$(OBJDIR)/%.d: $(SRCDIR)/%.cpp
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) $(OPENCV_INCLUDE) $(CUSTOM_LIB_INCLUDE) -MM $< > $@.tmp
+	@sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.tmp > $@
+	@rm -f $@.tmp
+
 
 
 CLION :
@@ -9,7 +60,7 @@ CLION :
 cmake_minimum_required(VERSION 3.27)
 project(gimpsep_clm_project) # You nedd to change the Project Name
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(ENV{OPENCV_DIR} "C:\\tools\\opencv\\build")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 

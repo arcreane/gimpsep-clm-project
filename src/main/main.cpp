@@ -11,81 +11,156 @@
 
 #include <iostream>
 #include <string>
+#include <cstdlib>
 
 // installation Clion: https://www.youtube.com/watch?v=fjq8eTuHnMM
 #include <opencv2/core.hpp>
+#include <opencv2/core/utils/logger.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
-#include "ImageTreatment_Maxime.h"
-#include "../lib/tinyfiledialogs.h"
+
+// One (and only one) of your C++ files must define CVUI_IMPLEMENTATION
+// before the inclusion of cvui.h to ensure its implementaiton is compiled.
+#define CVUI_IMPLEMENTATION
+#include "../lib/cvui.h"
+#include "../lib/EnhancedWindow.h" // exemple : https://github.com/Dovyski/cvui/blob/master/example/src/ui-enhanced-window-component/main.cpp
+
+#include "ImageApp.h"
+#include "Image.h"
+#include "PanoramaCreator.h"
+#include "ImageHandler.h"
 
 using namespace std;
 using namespace cv;
 
-
-int main1();
-int main2();
-int working_test_openCV();
-int brightness();
-int test();
+int main0();
+int run_application(const std::string& imagePathName);
 
 
 
 int main(int args, char** argv) {
+    // Remove openCV output message
+    cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_WARNING);
 
-    // Change the value to execute the right function
-    std::string i = "0";
-    if(args>1) {
-        i = argv[1];
+    // if imagePath in parameter
+//    std::string imagePath = "../src/ressources/HappyFish.jpg";
+    std::string imagePath = R"(C:\\Users\\ddugo\\Downloads\\chaplin.mp4)";
+    if(args>1) {imagePath = argv[1];}
+
+    // run the gui application
+    return run_application(imagePath);
+    //return main0();
+}
+
+
+
+
+int run_application(const std::string& imagePathName) {
+    // Create the GUI application
+    ImageApp myApp = ImageApp();
+
+    // if no parameter then popup select image
+    if (imagePathName.empty()) {
+        // popup
+    }
+    // load the image in the application
+    if (!myApp.isVideoFile(imagePathName) && !myApp.openStarterImage(imagePathName)){
+        std::cout << "Error : cannot open your image" << std::endl;
+        return -1; // if error open image then popup error [close or choose new image]
+    }
+    else if (myApp.isVideoFile(imagePathName) && !myApp.openVideo(imagePathName)){
+        std::cout << "Error : cannot open your video" << std::endl;
+        return -1; // if error open image then popup error [close or choose new image]
     }
 
-    if      (i=="1") {return main1();}
-    else {return test();}
-}
+    cvui::init(WINDOW_NAME);
+    while (true) {
+        myApp.getFrame() = cv::Scalar(49, 52, 49);
+        cv::Point cursor = cvui::mouse();
+        //---------------------------------------------------//
+        if (myApp.getIsVideo() && myApp.getIsVideoRunning()) {
+            myApp.showVideo();
+        }
+        myApp.centerBlock();
+        if (!myApp.getIsVideoRunning()) {
+            myApp.topLeftBlock();
+            myApp.bottomLeftBlock();
+        }
+        myApp.topRightBlock();
+        myApp.bottomBlock(cursor);
 
-int main1() {
-    printf("hello world");
-    return 0;
-}
-
-int working_test_openCV() {
-    string winName("Display window");
-    string imageName("../src/ressources/HappyFish.jpg");
-    Mat image;
-    image = imread(imageName, IMREAD_COLOR);
-    if (image.empty()) {std::cout << "Could not open or find the image" << std::endl;return -1;}
-    namedWindow(winName, WINDOW_AUTOSIZE);
-    imshow(winName, image);
-    waitKey(0);
-    return 0;
-}
-
-int brightness() {
-    try {
-        ImageTreatment_Maxime image("../src/ressources/HappyFish.jpg");
-        // Régler la luminosité avec curseur
-        image.Brightness();
-        // Afficher le résultat final
-        image.Display();
-    } catch (const std::exception& e) {
-        std::cerr << "Erreur : " << e.what() << std::endl;
-        return 1;
+        //---------------------------------------------------//
+        cvui::update();
+        cvui::imshow(WINDOW_NAME, myApp.getFrame());
+        char key = (char)cv::waitKey(20);
+        if (key  == 27 || cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_VISIBLE) < 1) {break;}
+        if (key  == 26) {std::cout << "ctrl+z clic" << std::endl;myApp.ControlZ();}
+        if (key  == 25) {std::cout << "ctrl+y clic" << std::endl;myApp.ControlY();}
     }
     return 0;
 }
 
-int test() {
-    char const * lFilterPatterns[4] = {  "*.jpg", "*.png", "*.jpeg", "*.jpe" };
-    char const * selection = tinyfd_openFileDialog( // there is also a wchar_t version
-            "Select file", // title
-            "C:\\", // optional initial directory
-            2, // number of filter patterns
-            lFilterPatterns, // char const * lFilterPatterns[2] = { "*.txt", "*.jpg" };
-            NULL, // optional filter description
-            0 // forbid multiple selections
-    );
 
-    cout << selection << endl;
-    return 1;
+// Lucie main
+int main0() {
+    std::string imagePath = "../src/ressources/HappyFish.jpg";
+    std::string folderPath = "../src/ressources/stitching/";
 
+    Image img(imagePath);
+
+    ImageHandler imgHandler(img);
+    imgHandler.Display();
+
+    // Apply brightness adjustment
+    imgHandler.Brightness(50);
+    imgHandler.Display();
+
+    // Rotate the image by 45 degrees around the center
+    std::vector<int> centerPoints = { img.cols() / 2, img.rows() / 2 };
+    imgHandler.Rotate(45, centerPoints);
+    imgHandler.Display();
+
+    // Resize the image to half its size
+    imgHandler.Resize(2.5);
+    imgHandler.Display();
+
+    // Crop the image to a central region
+    int startRow = 200;
+    int endRow = 600;
+    int startCol = 0;
+    int endCol = 3 * img.cols();
+    imgHandler.Crop(startRow, endRow, startCol, endCol);
+    imgHandler.Display();
+
+    // Apply dilation
+    imgHandler.Dilatation(13);
+    imgHandler.Display();
+
+    // Apply erosion
+    imgHandler.Erosion(13);
+    imgHandler.Display();
+
+    // Undo the last operation (erosion)
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    imgHandler.ControlZ();
+    imgHandler.Display();
+
+    // Rotate the image by 45 degrees around the center
+    imgHandler.Rotate(45, centerPoints);
+    imgHandler.Display();
+
+    PanoramaCreator myPano(folderPath);
+    Image panorama = myPano.CreatePanorama(myPano.getListImages());
+    panorama.Display();
+
+    return 0;
 }
+
