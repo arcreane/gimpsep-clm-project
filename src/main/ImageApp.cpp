@@ -71,7 +71,7 @@ bool ImageApp::openVideo(const std::string& imagePath) {
     fileExtension = std::filesystem::path(imagePath).extension().string();
     isVideo = true;
     isVideoRunning = true;
-    cap.open(imagePath);
+    cap.open(imagePath); // LINUX: cap.open(imagePath, cv::CAP_V4L2);
     if(!cap.isOpened()){return false;}
 
     frameCount = cap.get(cv::CAP_PROP_FRAME_COUNT);
@@ -100,7 +100,6 @@ bool ImageApp::openVideo() {
     cap.open(0);
     if(!cap.isOpened()){return false;}
     isVideoCapture = false;
-
 
 
     cv::Mat frameVideo;
@@ -273,14 +272,15 @@ void ImageApp::createPanelWindow(const std::string& title) {
     int y = windowHeight * topBlocksHeight / 100;
     int height = windowHeight - y;
     cvui::window(this->frame, x, y, widthBlocks, height, title);
-    cvui::beginColumn(this->frame, x, y+20, widthBlocks, height, 10);
+    cvui::beginColumn(this->frame, x, y+25, widthBlocks, height, 10);
 }
 
 void ImageApp::setLastAction(int newLastAction) {
     if (this->lastAction != newLastAction) {
         this->lastAction = newLastAction;
+        this->defaultValues();
     }
-    else if (newLastAction == -1) {return;}
+    else if (newLastAction == -1 || newLastAction == CROP) {return;}
     else {this->image->ControlZ();}
 }
 
@@ -290,10 +290,12 @@ void ImageApp::saveChanges() {
     }
 }
 
-void ImageApp::defaultValuesBtn() {
+void ImageApp::defaultValuesBtn(bool applyCtrlZ, double value, double valueInit) {
     int x = widthBlocks / 2 - 35;
     int y = windowHeight - bottomBlockHeight - 35;
     if (cvui::button(this->frame, x, y, "Default")) {
+        // apply ctrl+Z
+        if (applyCtrlZ && value != valueInit) {this->image->ControlZ();}
         this->defaultValues();
     }
 }
@@ -301,97 +303,127 @@ void ImageApp::defaultValuesBtn() {
 
 void ImageApp::brightnessPanel() {
     this->createPanelWindow("Brightness Panel");
-    if (cvui::trackbar(widthBlocks, &this->valuebrightness, (double)-180, (double)180)) {
+    cvui::text("Brightness value:");
+    if (cvui::trackbar(widthBlocks, &this->valuebrightness, -250, 250, 1,"%.0Lf")) {
         setLastAction(BRIGHTNESS);
         this->image->Brightness((int) valuebrightness);
     }
     this->saveChanges();
-    this->defaultValuesBtn();
+    this->defaultValuesBtn(true, this->valuebrightness, 0);
     cvui::endColumn();
 }
 
 
 void ImageApp::rotatePanel() {
-    this->createPanelWindow("Rotate Panel");
+    this->createPanelWindow("Pivot Panel");
     cv::Mat img = this->image->getCurrentImage().getImage();
-    if (cvui::trackbar(this->widthBlocks, &this->valuePivot, (double)-180, (double)180)) {
+    cvui::text("Pivot value:");
+    if (cvui::trackbar(this->widthBlocks, &this->valuePivot, 0, 360, 1,"%.0Lf")) {
         setLastAction(ROTATE);
         this->image->Rotate((int) this->valuePivot, {(int) this->centerPivotX, (int) this->centerPivotY});
     }
-    cvui::trackbar(this->widthBlocks, &this->centerPivotX, (double)0, (double)img.cols);
-    cvui::trackbar(this->widthBlocks, &this->centerPivotY, (double)0, (double)img.rows);
+    cvui::text("Pivot center X:");
+    cvui::trackbar(this->widthBlocks, &this->centerPivotX, 0, img.cols, 1,"%.0Lf");
+    cvui::text("Pivot center Y:");
+    cvui::trackbar(this->widthBlocks, &this->centerPivotY, 0, img.rows, 1,"%.0Lf");
     int x = (windowWidth / 2) - (img.cols / 2);
     int y = (windowHeight / 2) - (img.rows / 2);
     cvui::rect(frame, centerPivotX+x-5, centerPivotY+y-5, 10, 10, 0xff0000);
     this->saveChanges();
-    this->defaultValuesBtn();
+    this->defaultValuesBtn(true, this->valuePivot, 0);
     cvui::endColumn();
 }
 
 void ImageApp::resizePanel() {
     this->createPanelWindow("Resize Panel");
+    cvui::text("Resize value:");
     if (cvui::trackbar(this->widthBlocks, &this->valueResize, (double)0.1, maxValue)) {
         setLastAction(RESIZE);
         this->image->Resize(this->valueResize);
     }
-    this->defaultValuesBtn();
+    this->defaultValuesBtn(true, this->valueResize, 1);
     cvui::endColumn();
 }
 
 void ImageApp::cropPanel() {
     this->createPanelWindow("Crop Panel");
+    setLastAction(CROP);
     cv::Mat img = this->image->getCurrentImage().getImage();
-    cvui::trackbar(this->widthBlocks, &this->startColCrop, (double)0, (double)img.cols);
-    cvui::trackbar(this->widthBlocks, &this->endColCrop, (double)startColCrop+1, (double)img.cols);
-    cvui::trackbar(this->widthBlocks, &this->startRowCrop, (double)0, (double)img.rows);
-    cvui::trackbar(this->widthBlocks, &this->endRowCrop, (double)startRowCrop+1, (double)img.rows);
+    int step = 2;
+    if (img.cols >step) {
+        cvui::text("column min value:");
+        if (cvui::trackbar(this->widthBlocks, &this->startColCrop, 0, img.cols-step, 1,"%.0Lf")) {
+            if (startColCrop > endColCrop) {endColCrop = startColCrop+step;}
+        }
+        cvui::text("column max value:");
+        if (cvui::trackbar(this->widthBlocks, &this->endColCrop, 0+step, img.cols, 1,"%.0Lf")) {
+            if (endColCrop < startColCrop) {startColCrop = endColCrop-step;}
+        }
+    }
+    else {cvui::text("column value cannot be crop !");}
+    if (img.rows >step) {
+        cvui::text("row min value:");
+        if (cvui::trackbar(this->widthBlocks, &this->startRowCrop, 0, img.rows - step, 1, "%.0Lf")) {
+            if (startRowCrop > endRowCrop) { endRowCrop = startRowCrop + step; }
+        }
+        cvui::text("row max value:");
+        if (cvui::trackbar(this->widthBlocks, &this->endRowCrop, 0 + step, img.rows, 1, "%.0Lf")) {
+            if (endRowCrop < startRowCrop) { startRowCrop = endRowCrop - step; }
+        }
+    }
+    else {cvui::text("row value cannot be crop !");}
     int x = (this->windowWidth / 2) - (img.cols / 2);
     int y = (this->windowHeight / 2) - (img.rows / 2);
     cvui::rect(frame, x+startColCrop, startRowCrop+y, endColCrop-startColCrop, endRowCrop-startRowCrop, 0xff0000);
-    if (cvui::button("Apply")) {
-        this->image->Crop(startRowCrop, endRowCrop, startColCrop, endColCrop);
-        Image imgCropped = this->image->getCurrentImage();
-        startColCrop = 0;
-        startRowCrop = 0;
-        this->endColCrop = imgCropped.cols();
-        this->endRowCrop = imgCropped.rows();
-        setLastAction(-1);
+    if (img.cols >step || img.rows >step) {
+        if (cvui::button("Apply")) {
+            this->image->Crop(startRowCrop, endRowCrop, startColCrop, endColCrop);
+            Image imgCropped = this->image->getCurrentImage();
+            this->defaultValues();
+        }
+        this->defaultValuesBtn(false, 0, 0);
     }
-    this->defaultValuesBtn();
     cvui::endColumn();
 }
 
 void ImageApp::dilatationPanel() {
     this->createPanelWindow("Dilatation Panel");
-    if (cvui::trackbar(widthBlocks, &this->valueDilatation, (double)1.0, (double)100.0)) {
+    cvui::text("Dilatation value:");
+    if (cvui::trackbar(widthBlocks, &this->valueDilatation, 1, 99, 1, "%.0Lf")) {
         setLastAction(DILATATION);
         this->image->Dilatation((int) valueDilatation);
     }
-    this->defaultValuesBtn();
+    this->defaultValuesBtn(true, this->valueDilatation, 1);
     cvui::endColumn();
 }
 
 void ImageApp::erosionPanel() {
     this->createPanelWindow("Erosion Panel");
-    if (cvui::trackbar(widthBlocks, &this->valueErosion, (double)1.0, (double)100.0)) {
+    cvui::text("Erosion value:");
+    if (cvui::trackbar(widthBlocks, &this->valueErosion, 1, 99, 1, "%.0Lf")) {
         setLastAction(EROSION);
         this->image->Erosion((int) valueErosion);
     }
-    this->defaultValuesBtn();
+    this->defaultValuesBtn(true, this->valueErosion, 1);
     cvui::endColumn();
 }
 
 void ImageApp::cannyEdgePanel() {
     this->createPanelWindow("Canny Edge Panel");
-    cvui::trackbar(this->widthBlocks, &this->blurredValueCanny, (double)0, (double)100.0);
-    cvui::trackbar(this->widthBlocks, &this->lowThresholdCanny, (double)0, (double)100.0);
-    cvui::trackbar(this->widthBlocks, &this->highThresholdCanny, (double)0, (double)100.0);
-    if (cvui::button("Apply")) {
-        std::cout << "Not implemented" << std::endl;
-        //setLastAction(-1);
-        //this->image->CannyEdge((float) blurredValueCanny, (int) lowThresholdCanny, (int) highThresholdCanny);
+    cvui::text("Blurred value:");
+    cvui::trackbar(this->widthBlocks, &this->blurredValueCanny, (double)0, (double)1.0);
+    cvui::text("Low threshold value:");
+    if (cvui::trackbar(this->widthBlocks, &this->lowThresholdCanny, 0, 255, 1, "%.0Lf")) {
+        if (lowThresholdCanny > highThresholdCanny) {highThresholdCanny = lowThresholdCanny;}
     }
-    this->defaultValuesBtn();
+    cvui::text("High threshold value:");
+    if (cvui::trackbar(this->widthBlocks, &this->highThresholdCanny, 0, 255, 1, "%.0Lf")) {
+        if (highThresholdCanny < lowThresholdCanny) {lowThresholdCanny = highThresholdCanny;}
+    }
+    if (cvui::button("Apply")) {
+        this->image->CannyEdge((float) blurredValueCanny, (int) lowThresholdCanny, (int) highThresholdCanny);
+    }
+    this->defaultValuesBtn(false, 0, 0);
     cvui::endColumn();
 }
 
@@ -401,7 +433,11 @@ void ImageApp::panoramaPanel() {
     this->imagePathName = iconFolder+"../stitching/";
     PanoramaCreator myPano(this->imagePathName);
     Image panorama = myPano.CreatePanorama(myPano.getListImages());
-    this->image->Save(panorama);
+
+    // new Image handler
+    delete image;
+    image = nullptr;
+    this->image = new ImageHandler(panorama);
     this->defaultValues();
     // change this->image->imageSource
     isVideo = false;
@@ -428,11 +464,14 @@ void ImageApp::saveImage() {
     }
 }
 void ImageApp::newImage() {
-    //system("explorer");
+    // new Image handler
+    delete image;
+    image = nullptr;
     openStarterImage("../src/ressources/HappyFish.jpg");
 }
 void ImageApp::resetImage() {
     this->image->Save(this->image->getSourceImage());
+    lastAction = -1;
     this->defaultValues();
 }
 
@@ -440,20 +479,14 @@ void ImageApp::defaultValues() {
     cv::Mat img = this->image->getCurrentImage().getImage();
     // revoir tous les valeurs par defaut
     valuebrightness = 0;
-    valuePivot = 0; centerPivotX = 0; centerPivotY = 0;
-    valueResize = 0;
-    startRowCrop = 0; startColCrop = 0;
-    valueDilatation = 0;
-    valueErosion = 0;
+    valuePivot = 0;  centerPivotX = img.cols / 2; centerPivotY = img.rows/ 2;
+    valueResize = 1;
+    maxValue = std::min((10 * windowWidth / img.cols) / 10.0, (10 * windowHeight / img.rows) / 10.0);
+    startRowCrop = 0; startColCrop = 0; endColCrop = img.cols; endRowCrop = img.rows;
+    valueDilatation = 1;
+    valueErosion = 1;
 
-    // ROTATE PART
-    centerPivotX = img.cols / 2;
-    centerPivotY = img.rows/ 2;
-    // CROP
-    endColCrop = img.cols;
-    endRowCrop = img.rows;
-    // RESIZE
-    maxValue = std::min(windowWidth / img.cols, windowHeight / img.rows);
+
 }
 
 
@@ -510,6 +543,9 @@ bool ImageApp::getIsVideoRunning() {
 }
 
 void ImageApp::captureVideoPanel() {
+    // new Image handler
+    delete image;
+    image = nullptr;
     this->openVideo();
 }
 

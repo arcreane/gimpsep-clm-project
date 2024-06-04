@@ -19,6 +19,7 @@ private:
 	std::vector<Image> imageList;
 	Image imageSource;
 	std::vector<Image>::iterator current;
+    int maxIterator = 30;
 
 public:
 	// Constructors

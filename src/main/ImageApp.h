@@ -22,17 +22,17 @@
 #define WINDOW_NAME "CVUI IMAGE TREATEMENT ISEP"
 enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE}; // options
 enum {IDLE, OVER, DOWN}; // imageStates
-enum {SAVE, NEW, RESET, PANORAMA, CAPTUREVIDEO}; // imageParameters
+enum {RESET, SAVE, NEW, PANORAMA, CAPTUREVIDEO}; // imageParameters
 
 
 class ImageApp {
 
 private:
     std::string iconFolder = "../src/ressources/icon/";
-    int windowWidth = 910; // in px
-    int windowHeight = 520; // in px
+    int windowWidth = 1210; // in px
+    int windowHeight = 620; // in px
     int blocksWidth = 22; // in % [1, 35]
-    int topBlocksHeight = 40; // in % [1, 50]
+    int topBlocksHeight = 30; // in % [1, 50]
     int bottomBlockHeight = 22; // in px
     cv::Mat frame = cv::Mat(this->windowHeight, this->windowWidth, CV_8UC3);
     int widthBlocks = windowWidth * blocksWidth / 100;
@@ -48,26 +48,26 @@ private:
     // Button & grid parameters & info-bulles list
     int buttonWidth = 40;
     int buttonHeight = 40;
-    int buttonsPerRow = widthBlocks / (topBlocksHeight+ 10);
+    int buttonsPerRow = widthBlocks / (buttonWidth+ 5);
     // Icon import
     std::vector<std::string> messagesBlock = {"Brightness", "Rotate", "Resize", "Crop", "Dilatation", "Erosion", "Canny edge"};
     std::vector<std::string> iconNameFileBlock = {"brightness", "rotate", "resize", "crop", "dilatation", "erosion", "cannyEdge"};
     std::vector<std::vector<cv::Mat>> iconListBlock;
 
     /* **** Parameters Variables **** */
-    std::vector<std::string> messagesParameters = {"Save image", "New image", "Reset modifications", "Panorama", "Capture Video"};
-    std::vector<std::string> iconNameFileParameters = {"save", "new", "reset", "panorama", "captureVideo"};
+    std::vector<std::string> messagesParameters = {"Reset modifications", "Save image", "New image", "Panorama", "Video Capture"};
+    std::vector<std::string> iconNameFileParameters = {"reset", "save", "new", "panorama", "captureVideo"};
     std::vector<std::vector<cv::Mat>> iconListParameters;
 
     /* **** Trackbar Panel Values **** */
     int lastAction = -1;
-    double valuebrightness = 0;
-    double valuePivot = 0; double centerPivotX = 0; double centerPivotY = 0;
+    int valuebrightness = 0;
+    int valuePivot = 0; int centerPivotX = 0; int centerPivotY = 0;
     double valueResize = 0; double maxValue; // revoir tous les valeurs par defaut
-    double startRowCrop = 0; double endRowCrop; double startColCrop = 0; double endColCrop;
-    double valueDilatation = 0;
-    double valueErosion = 0;
-    double blurredValueCanny = 0; double lowThresholdCanny = 0; double highThresholdCanny = 0;
+    int startRowCrop = 0; int endRowCrop; int startColCrop = 0; int endColCrop;
+    int valueDilatation = 0;
+    int valueErosion = 0;
+    double blurredValueCanny = 0; int lowThresholdCanny = 0; int highThresholdCanny = 0;
 
 
     /* **** Video **** */
@@ -114,7 +114,7 @@ public:
     void createPanelWindow(const std::string& title);
     void setLastAction(int newLastAction);
     void saveChanges();
-    void defaultValuesBtn();
+    void defaultValuesBtn(bool applyCtrlZ, double value, double valueInit);
     void brightnessPanel();
     void rotatePanel();
     void resizePanel();
