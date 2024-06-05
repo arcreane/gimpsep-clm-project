@@ -43,8 +43,8 @@ int main(int args, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_WARNING);
 
     // if imagePath in parameter
-    //std::string imagePath = "../src/ressources/HappyFish.jpg";
-    std::string imagePath = "../src/ressources/chaplin.mp4";
+//    std::string imagePath = "../src/ressources/HappyFish.jpg";
+    std::string imagePath = R"(C:\\Users\\ddugo\\Downloads\\chaplin.mp4)";
     if(args>1) {imagePath = argv[1];}
 
     // run the gui application
@@ -163,5 +163,4 @@ int main0() {
 
     return 0;
 }
-
 

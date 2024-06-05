@@ -7,8 +7,30 @@
 // https://github.com/Dovyski/cvui
 // https://fernandobevilacqua.com/cvui/components/image/
 #include "../lib/cvui.h" // Cannot be put in the header file
+#include "../lib/tinyfiledialogs.h" // Include file dialog library
+#include <locale>
 
 
+/* ************************************************* */
+/* Utils */
+/* ************************************************* */
+
+bool has_accents(std::string str) {
+    std::locale loc("en_US.UTF-8");
+    for (char c : str) {
+        if (std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::space, c) ||
+            std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::print, c) ||
+            std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::punct, c))
+        {
+            // Le caractère est un espace, un caractère imprimable ou un caractère de ponctuation
+            continue;
+        }
+        // Le caractère n'est pas un espace, un caractère imprimable ou un caractère de ponctuation, donc c'est un caractère accentué
+        return true;
+    }
+    // Aucun caractère accentué n'a été trouvé
+    return false;
+}
 
 /* ************************************************* */
 /* Constructors */
@@ -396,9 +418,16 @@ void ImageApp::cannyEdgePanel() {
 }
 
 void ImageApp::panoramaPanel() {
-    std::cout << "Folder choosing are not implemented" << std::endl;
+    std::string folderPath = tinyfd_selectFolderDialog("Choose a folder for the panorama", "C:\\");
 
-    this->imagePathName = iconFolder+"../stitching/";
+    if (folderPath.empty()) {
+        std::cout << "User closed the dialog without selecting a folder." << std::endl;
+        return;
+    }
+
+    std::cout << folderPath << std::endl;
+
+    this->imagePathName = folderPath + "/";
     PanoramaCreator myPano(this->imagePathName);
     Image panorama = myPano.CreatePanorama(myPano.getListImages());
     this->image->Save(panorama);
@@ -411,26 +440,72 @@ void ImageApp::panoramaPanel() {
 
 
 
+
 /* ************************************************* */
 /* Parameters */
 /* ************************************************* */
 
 void ImageApp::saveImage() {
-    // need to read the imagePath exension to save in the right format
+    // need to read the imagePath extension to save in the right format
+    char const * lFilterPatterns[6] = {  "*.jpg", "*.png", "*.jpeg", "*.jpe" , "*.mp4", "*.avi" };
+    std::string outputPath = tinyfd_saveFileDialog(
+            "Save file | Please do not select file with accent",
+            "C:\\",
+            6,
+            lFilterPatterns,
+            NULL
+    );
+
+    if (outputPath.empty()) {
+        std::cout << "User closed the dialog without selecting a file." << std::endl;
+        return;
+    }
+
+    std::string fileExtension = outputPath.substr(outputPath.find_last_of('.'));
+
     if (videoExtensions.find(fileExtension) != videoExtensions.end()) { // video
         std::cout << "Video save not implemented. The screen hase beeen saved" << std::endl;
-        imwrite (this->imageOutputPath + ".png", this->image->getCurrentImage().getImage());
+        imwrite (outputPath  + ".png", this->image->getCurrentImage().getImage());
 
     }
     else { // imaage
-        imwrite (this->imageOutputPath + this->fileExtension, this->image->getCurrentImage().getImage());
+        imwrite (outputPath , this->image->getCurrentImage().getImage());
 
     }
 }
+
 void ImageApp::newImage() {
-    //system("explorer");
-    openStarterImage("../src/ressources/HappyFish.jpg");
+    char const * lFilterPatterns[6] = {  "*.jpg", "*.png", "*.jpeg", "*.jpe" , "*.mp4", "*.avi" };
+    std::string inputPath = tinyfd_openFileDialog(
+            "Select file | Please do not select file with accent",
+            "C:\\",
+            6,
+            lFilterPatterns,
+            NULL,
+            0
+    );
+
+    std::cout << inputPath << std::endl;
+
+    if (has_accents(inputPath)) {
+        std::cout << "Please do not use file with accent" << std::endl;
+        newImage(); // Call newImage() recursively to select a new file
+        return;
+    }
+
+    if (isVideoFile(inputPath)) {
+        // Call video opening method
+        if (!openVideo(inputPath)) {
+            std::cout << "Error during video opening, please select new video" << std::endl;
+            newImage(); // Call newImage() recursively to select a new file
+        }
+    } else {
+        // Call img opening method
+        openStarterImage(inputPath);
+    }
 }
+
+
 void ImageApp::resetImage() {
     this->image->Save(this->image->getSourceImage());
     this->defaultValues();
@@ -512,4 +587,7 @@ bool ImageApp::getIsVideoRunning() {
 void ImageApp::captureVideoPanel() {
     this->openVideo();
 }
+
+
+
 
