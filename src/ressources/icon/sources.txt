@@ -48,3 +48,8 @@ NEW
 https://www.flaticon.com/free-icon/new_4131597
 https://www.flaticon.com/free-icon/new_4131900
 https://www.flaticon.com/free-icon/new-window_2704814
+
+CAPTUREVIDEO
+https://www.flaticon.com/free-icon/cam-recorder_5346453
+https://www.flaticon.com/free-icon/video-camera_711245
+https://www.flaticon.com/free-icon/video-camera_686458

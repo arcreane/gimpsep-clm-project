@@ -14,3 +14,5 @@ The advantages of this project are:
 * the modularity
 * using image manipulation
 * adaptability
+
+**!!! The GUI work only on windows !!!** (for opening dialog file easily else it can work on linux)

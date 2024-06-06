@@ -56,7 +56,7 @@ void ImageHandler::Save(const Image& imageToSave)
 	imageList.push_back(imageToSave);
 
 	// Limit the history size to 10
-	if (imageList.size() > 10)
+	if (imageList.size() > maxIterator)
 	{
     	imageList.erase(imageList.begin());
 	}
@@ -71,11 +71,11 @@ void ImageHandler::ControlZ()
 	if (current != imageList.begin())
 	{
 		current--;
-        cout << "Undo successful." << endl;
+        std::cout << "ctrl+z apply" << std::endl;
 	}
-    else 
+    else
     {
-        cout << "No more history to revert to." << endl;
+        std::cout << "No more data saved" << std::endl;
     }
 }
 
@@ -85,14 +85,14 @@ void ImageHandler::ControlZ()
  **/
 void ImageHandler::ControlY()
 {
-	if (current != imageList.end())
+	if (current != imageList.end() - 1)
 	{
 		current++;
-    	cout << "Redo successful." << endl;
+        std::cout << "ctrl+y apply" << std::endl;
     }
     else
     {
-        cout << "Already at the latest image." << endl;
+        std::cout << "No more data saved" << std::endl;
     }
 }
 
