@@ -55,7 +55,7 @@ private:
     std::vector<std::vector<cv::Mat>> iconListBlock;
 
     /* **** Parameters Variables **** */
-    std::vector<std::string> messagesParameters = {"Reset modifications", "Save image", "New image", "Panorama", "Video Capture"};
+    std::vector<std::string> messagesParameters = {"Reset modifications", "Save image", "New media (image, video)", "Panorama", "Video Capture"};
     std::vector<std::string> iconNameFileParameters = {"reset", "save", "new", "panorama", "captureVideo"};
     std::vector<std::vector<cv::Mat>> iconListParameters;
 

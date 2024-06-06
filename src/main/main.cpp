@@ -11,24 +11,21 @@
 
 #include <iostream>
 #include <string>
-#include <cstdlib>
 
 // installation Clion: https://www.youtube.com/watch?v=fjq8eTuHnMM
 #include <opencv2/core.hpp>
 #include <opencv2/core/utils/logger.hpp>
-#include <opencv2/imgcodecs.hpp>
+//#include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
 // One (and only one) of your C++ files must define CVUI_IMPLEMENTATION
 // before the inclusion of cvui.h to ensure its implementaiton is compiled.
 #define CVUI_IMPLEMENTATION
 #include "../lib/cvui.h"
-#include "../lib/EnhancedWindow.h" // exemple : https://github.com/Dovyski/cvui/blob/master/example/src/ui-enhanced-window-component/main.cpp
+//#include "../lib/EnhancedWindow.h" // exemple : https://github.com/Dovyski/cvui/blob/master/example/src/ui-enhanced-window-component/main.cpp
 
 #include "ImageApp.h"
-#include "Image.h"
-#include "PanoramaCreator.h"
-#include "ImageHandler.h"
+
 
 using namespace std;
 using namespace cv;
@@ -42,8 +39,8 @@ int main(int args, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_WARNING);
 
     // if imagePath in parameter
-    //std::string imagePath = "../src/ressources/HappyFish.jpg";
-    std::string imagePath = R"(..\\src\\ressources\\chaplin.mp4)";
+    std::string imagePath = "../src/ressources/HappyFish.jpg";
+    //std::string imagePath = R"(..\\src\\ressources\\chaplin.mp4)";
     if(args>1) {imagePath = argv[1];}
 
     // run the gui application

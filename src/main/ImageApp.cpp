@@ -309,6 +309,7 @@ void ImageApp::setLastAction(int newLastAction) {
 void ImageApp::saveChanges() {
     if (cvui::button("Save changes")) {
         this->image->Save(this->image->getCurrentImage());
+        this->defaultValues();
     }
 }
 
