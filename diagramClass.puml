@@ -1,0 +1,67 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+'https://plantuml.com/fr/class-diagram
+
+
+
+
+protocol main {
+    runApplication()
+}
+
+main  --> "CLM-Project"
+package "CLM-Project" {
+    class ImageApp{
+    ImageHandler image
+    +openImage()
+    +openVideo()
+    +openCamera()
+    +openPanorama()
+    -showImageInWindow()
+    -imageManipulation()
+   +saveImage()
+    }
+
+    class ImageHandler{
+        Vector<Image> : imageList
+        +ControlZ()
+        +ControlY()
+    }
+
+    class Image{
+        +Brightness()
+    	+Rotate()
+    	+Resize()
+    	+Crop()
+    	+CannyEdge()
+        +Dilatation()
+        +Erosion()
+    }
+
+    class PanoramaCreation{
+        +selecImages()
+        +selectFolder()
+        -createPanorama()
+    }
+
+
+    ImageApp *- ImageHandler
+    ImageApp *-- PanoramaCreation
+    ImageHandler *- Image
+    PanoramaCreation *- Image
+
+
+
+
+
+}
+'note left of "Image"
+'    fefg
+'end note
+
+
+
+
+
+
+@enduml
