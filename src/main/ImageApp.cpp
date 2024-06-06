@@ -11,26 +11,7 @@
 #include <locale>
 
 
-/* ************************************************* */
-/* Utils */
-/* ************************************************* */
 
-bool has_accents(std::string str) {
-    std::locale loc("en_US.UTF-8");
-    for (char c : str) {
-        if (std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::space, c) ||
-            std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::print, c) ||
-            std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::punct, c))
-        {
-            // Le caractère est un espace, un caractère imprimable ou un caractère de ponctuation
-            continue;
-        }
-        // Le caractère n'est pas un espace, un caractère imprimable ou un caractère de ponctuation, donc c'est un caractère accentué
-        return true;
-    }
-    // Aucun caractère accentué n'a été trouvé
-    return false;
-}
 
 /* ************************************************* */
 /* Constructors */
@@ -41,9 +22,6 @@ ImageApp::ImageApp() {
         cv::Mat icon_idle = cv::imread(this->iconFolder + iconName + "-idle.png");
         cv::Mat icon_over = cv::imread(this->iconFolder + iconName + "-over.png");
         cv::Mat icon_down = cv::imread(this->iconFolder + iconName + "-down.png");
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // faire mon traitement python d'image si l'image existe !!!!!!!!!!!!!!!!!!
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // If cannot open image then black image
         if (icon_idle.empty()) {icon_idle = cv::Mat::ones(cv::Size(40, 40), CV_8UC3); icon_idle.setTo(cv::Scalar(82, 82, 82));}
         if (icon_over.empty()) {icon_over = cv::Mat::zeros(cv::Size(40, 40), CV_8UC3);}
@@ -55,9 +33,6 @@ ImageApp::ImageApp() {
         cv::Mat icon_idle = cv::imread(this->iconFolder + iconName + "-idle.png");
         cv::Mat icon_over = cv::imread(this->iconFolder + iconName + "-over.png");
         cv::Mat icon_down = cv::imread(this->iconFolder + iconName + "-down.png");
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // faire mon traitement python d'image si l'image existe !!!!!!!!!!!!!!!!!!
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // If cannot open image then black image
         if (icon_idle.empty()) {icon_idle = cv::Mat::ones(cv::Size(40, 40), CV_8UC3); icon_idle.setTo(cv::Scalar(82, 82, 82));}
         if (icon_over.empty()) {icon_over = cv::Mat::zeros(cv::Size(40, 40), CV_8UC3);}
@@ -69,19 +44,20 @@ ImageApp::ImageApp() {
 bool ImageApp::openStarterImage(const std::string& imagePath) {
     this->imagePathName = imagePath;
     Image img = Image(this->imagePathName);
+    if(img.getImage().empty()){return false;}
+    // resize image if too big
+    maxValue = std::min((10 * windowWidth / img.cols()) / 10.0, (10 * windowHeight / img.rows()) / 10.0);
+    if (img.rows() >= windowHeight || img.cols() >= windowWidth) {
+        img = img.Resize(maxValue);
+    }
     if (image == nullptr) {this->image = new ImageHandler(img);}
     else {image->Save(img);}
     fileExtension = std::filesystem::path(imagePath).extension().string();
     isVideo = false;
     isVideoRunning = false;
-    /*
-     * pas de controle d'image, cette partie sera modifié pour imlémentation de la class image qui gerera ce cas
-     * ImageApp n'aura qu'un contructeur par défaut
-     * En ouvran l'appication, il y aura un popup pour select l'image
-     * On peut run l'executable avec un paramete imagePath pour ne pas avoir ce popup à l'ouverture
-     * if error return false ou ouvre le popup
-     */
+
     this->defaultValues();
+
     return true;
 }
 
@@ -99,6 +75,7 @@ bool ImageApp::openVideo(const std::string& imagePath) {
     frameCount = cap.get(cv::CAP_PROP_FRAME_COUNT);
     fps = cap.get(cv::CAP_PROP_FPS);
     videoLength = frameCount / fps;
+    positionVideo = 0;
 
     cv::Mat frameVideo;
     cap >> frameVideo;
@@ -133,6 +110,44 @@ bool ImageApp::openVideo() {
     this->defaultValues();
     return true;
 }
+
+
+void ImageApp::startDefaultImage(std::vector<std::string> text) {
+    this->imagePathName = "error.png";
+    // Créer une image noire
+    cv::Mat m = cv::Mat::ones(cv::Size(windowWidth/2, windowHeight/2), CV_8UC3);
+    // Définir le texte sur plusieurs lignes
+    if (text.empty()) {text.emplace_back("Please open a media");}
+    // Définir la police et la taille
+    int police = cv::FONT_HERSHEY_SIMPLEX;
+    double taille = 1.0;
+    // Définir la couleur (BGR) et l'épaisseur
+    cv::Scalar couleur = cv::Scalar(255, 255, 255);
+    int epaisseur = 2;
+    // Calculer la hauteur de ligne
+    int baseline = 0;
+    cv::Size tailleTexte = cv::getTextSize("Test", police, taille, epaisseur, &baseline);
+    int hauteurLigne = tailleTexte.height + baseline;
+    // Dessiner chaque ligne
+    for (int i = 0; i < text.size(); ++i) {
+        // Calculer la position centrée pour cette ligne
+        tailleTexte = cv::getTextSize(text[i], police, taille, epaisseur, &baseline);
+        cv::Point position;
+        position.x = (m.cols - tailleTexte.width) / 2;
+        position.y = (int) (m.rows + hauteurLigne * (i*2 - (int) text.size() / 2.0)) / 2;
+        // Ajouter le texte à l'image
+        cv::putText(m, text[i], position, police, taille, couleur, epaisseur);
+    }
+
+    Image img = Image(m);
+    if (image == nullptr) {this->image = new ImageHandler(img);}
+    else {image->Save(img);}
+    fileExtension = std::filesystem::path(imagePathName).extension().string();
+    isVideo = false;
+    isVideoRunning = false;
+    this->defaultValues();
+}
+
 
 /* ************************************************* */
 /* Deconstructors */
@@ -176,7 +191,8 @@ void ImageApp::setOption(int newOption) {
 void ImageApp::applyParameter(int parameter) {
     switch (parameter) {
         case SAVE: saveImage(); break;
-        case NEW: newImage(); break;
+        case NEW:
+            newMedia(); break;
         case RESET: resetImage(); break;
         case PANORAMA: panoramaPanel(); break;
         case CAPTUREVIDEO: captureVideoPanel(); break;
@@ -280,8 +296,15 @@ void ImageApp::bottomBlock(cv::Point cursor) {
     cvui::rect(frame, 0, y, windowWidth+5, bottomBlockHeight, 0x4a4a4a, 0x313131);
     cvui::beginRow(this->frame, 5, y+5, -1, -1, 50);
     cvui::printf(0.4, 0xffffff, "image size: cols = %d rows = %d", img.cols(), img.rows());
-    cvui::printf(0.4, 0xffffff, "cursor: x = %d y = %d", cursor.x, cursor.y);
     cvui::text(this->fileExtension, 0.4, 0xffffff);
+    // afficher la position de la sourie dans l'image
+    int x1 = (windowWidth / 2) - (img.cols() / 2);
+    int y1 = (windowHeight / 2) - (img.rows() / 2);
+    int x2 = x1 + img.cols();
+    int y2 = y1 + img.rows();
+    if (x1 <= cursor.x && cursor.x <= x2 && y1 <= cursor.y && cursor.y <= y2) {
+        cvui::printf(0.4, 0xffffff, "cursor: x = %d y = %d", cursor.x-x1, cursor.y-y1);
+    }
     cvui::endRow();
 }
 
@@ -451,19 +474,39 @@ void ImageApp::cannyEdgePanel() {
 }
 
 void ImageApp::panoramaPanel() {
-    std::string folderPath = tinyfd_selectFolderDialog("Choose a folder for the panorama", "C:\\");
 
-    if (folderPath.empty()) {
-        std::cout << "User closed the dialog without selecting a folder." << std::endl;
-        return;
+    char const * lFilterPatterns[5] = {"*.png", "*.jpg", "*.jpeg", "*.jpe", "*.webp"};
+    char const * inputPathCStr = tinyfd_openFileDialog(
+            "Choose images for the panorama",
+            "Downloads", //"C:\\",
+            5, lFilterPatterns, nullptr, true
+    );
+    // Nothing si l'user ferme la fenetre
+    if (inputPathCStr == nullptr) {return;}
+    // Recuperation des paths divised  par '|'
+    std::vector<std::string> listImages = {};
+    std::stringstream ss(inputPathCStr);
+    std::string token;
+    while (std::getline(ss, token, '|')) {
+        listImages.push_back(token);
     }
+    // Apply the stitchning
+    Image panorama = PanoramaCreator::CreatePanorama(listImages);
 
-    std::cout << folderPath << std::endl;
-
+    /* // with a folder selection
+    std::filesystem::path currentPath = std::filesystem::current_path();
+    char const * inputPathCStr = tinyfd_selectFolderDialog(
+            "Choose a folder for the panorama","Downloads");
+    if (inputPathCStr == nullptr) {return;}
+    std::string folderPath(inputPathCStr);
     this->imagePathName = folderPath + "/";
     PanoramaCreator myPano(this->imagePathName);
-    Image panorama = myPano.CreatePanorama(myPano.getListImages());
+    Image panorama = PanoramaCreator::CreatePanorama(myPano.getListImages());*/
 
+    if (panorama.getImage().empty()) {
+        this->startDefaultImage({"Error : can't stitch images.","Please select a new media"});
+        return;
+    }
     // new Image handler
     delete image;
     image = nullptr;
@@ -483,21 +526,17 @@ void ImageApp::panoramaPanel() {
 /* ************************************************* */
 
 void ImageApp::saveImage() {
-    // need to read the imagePath extension to save in the right format
-    char const * lFilterPatterns[6] = {  "*.jpg", "*.png", "*.jpeg", "*.jpe" , "*.mp4", "*.avi" };
-    std::string outputPath = tinyfd_saveFileDialog(
+    char const * lFilterPatterns[5] = {"*.png", "*.jpg", "*.jpeg", "*.jpe", "*.webp"};
+    char const * inputPathCStr = tinyfd_saveFileDialog(
             "Save file | Please do not select file with accent",
-            "C:\\",
-            6,
-            lFilterPatterns,
-            NULL
+           "Downloads", //"C:\\",
+            5, lFilterPatterns, nullptr
     );
+    // Nothing si l'user ferme la fenetre
+    if (inputPathCStr == nullptr) {return;}
 
-    if (outputPath.empty()) {
-        std::cout << "User closed the dialog without selecting a file." << std::endl;
-        return;
-    }
-
+    // Recuperation du path du file
+    std::string outputPath(inputPathCStr);
     std::string fileExtension = outputPath.substr(outputPath.find_last_of('.'));
 
     if (videoExtensions.find(fileExtension) != videoExtensions.end()) { // video
@@ -505,46 +544,47 @@ void ImageApp::saveImage() {
         imwrite (outputPath  + ".png", this->image->getCurrentImage().getImage());
 
     }
-    else { // imaage
+    else {
         imwrite (outputPath , this->image->getCurrentImage().getImage());
-
     }
 }
 
-void ImageApp::newImage() {
-    char const * lFilterPatterns[6] = {  "*.jpg", "*.png", "*.jpeg", "*.jpe" , "*.mp4", "*.avi" };
-    std::string inputPath = tinyfd_openFileDialog(
+void ImageApp::newMedia() {
+    // boite de dialogue pour choisir un fichier
+    char const * lFilterPatterns[7] = {"*.jpg", "*.png", "*.jpeg", "*.jpe", "*.webp" , "*.mp4", "*.avi" };
+    char const * inputPathCStr = tinyfd_openFileDialog(
             "Select file | Please do not select file with accent",
-            "C:\\",
-            6,
-            lFilterPatterns,
-            NULL,
-            0
+            "Downloads", //"C:\\",
+            7, lFilterPatterns, nullptr, 0
     );
+    // Nothing si l'user ferme la fenetre
+    if (inputPathCStr == nullptr) {return;}
 
+    // Recuperation du path du file
+    std::string inputPath(inputPathCStr);
     std::cout << inputPath << std::endl;
-
-    if (has_accents(inputPath)) {
-        std::cout << "Please do not use file with accent" << std::endl;
-        newImage(); // Call newImage() recursively to select a new file
-        return;
-    }
 
     // new Image handler
     delete image;
     image = nullptr;
 
+    if (has_accents(inputPath)) {
+        //std::cout << "Please do not use file with accent" << std::endl;
+        //newImage(); // Call newMedia() recursively to select a new file
+        this->startDefaultImage({"Error : do not use file with accent.","Please select a new media"});
+        return;
+    }
     if (isVideoFile(inputPath)) {
         // Call video opening method
         if (!openVideo(inputPath)) {
-            std::cout << "Error during video opening, please select new video" << std::endl;
-            newImage(); // Call newImage() recursively to select a new file
+            //std::cout << "Error during video opening, please select new video" << std::endl;
+            //newImage(); // Call newMedia() recursively to select a new file
+            this->startDefaultImage({"Error : can't open your video.","Please select a new media"});
         }
     } else {
         // Call img opening method
         openStarterImage(inputPath);
     }
-
 }
 
 
@@ -573,7 +613,7 @@ void ImageApp::defaultValues() {
 /* Video */
 /* ************************************************* */
 
-bool ImageApp::isVideoFile(std::string filename) {
+bool ImageApp::isVideoFile(const std::string& filename) {
     std::string extension = std::filesystem::path(filename).extension().string();
     if (videoExtensions.find(extension) != videoExtensions.end()) {
         return true;}
@@ -595,6 +635,11 @@ void ImageApp::showVideo() {
     }
     else {
         Image img = Image(frameVideo);
+        // resize image if too big
+        maxValue = std::min((10 * windowWidth / img.cols()) / 10.0, (10 * windowHeight / img.rows()) / 10.0);
+        if (img.rows() >= windowHeight || img.cols() >= windowWidth) {
+            img = img.Resize(maxValue);
+        }
         image->Save(img);
     }
 }
@@ -613,10 +658,10 @@ void ImageApp::videoPanel() {
     cvui::endColumn();
 }
 
-bool ImageApp::getIsVideo() {
+bool ImageApp::getIsVideo() const {
     return isVideo;
 }
-bool ImageApp::getIsVideoRunning() {
+bool ImageApp::getIsVideoRunning() const {
     return isVideoRunning;
 }
 
@@ -629,4 +674,23 @@ void ImageApp::captureVideoPanel() {
 
 
 
+/* ************************************************* */
+/* Utils */
+/* ************************************************* */
 
+bool ImageApp::has_accents(std::string str) {
+    std::locale loc("en_US.UTF-8");
+    for (char c : str) {
+        if (std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::space, c) ||
+            std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::print, c) ||
+            std::use_facet<std::ctype<char>>(loc).is(std::ctype_base::punct, c))
+        {
+            // Le caractère est un espace, un caractère imprimable ou un caractère de ponctuation
+            continue;
+        }
+        // Le caractère n'est pas un espace, un caractère imprimable ou un caractère de ponctuation, donc c'est un caractère accentué
+        return true;
+    }
+    // Aucun caractère accentué n'a été trouvé
+    return false;
+}

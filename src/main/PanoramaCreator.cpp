@@ -4,6 +4,9 @@ using namespace std;
 using namespace cv;
 
 // Define the constructor
+
+PanoramaCreator::PanoramaCreator() {}
+
 PanoramaCreator::PanoramaCreator(const string& folderPath)
 {
     set<string> valid_extensions = {".jpg", ".webp", ".png", ".jpeg"};

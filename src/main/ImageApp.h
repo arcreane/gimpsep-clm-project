@@ -8,7 +8,7 @@
 #include <string>
 #include <filesystem>
 #include <unordered_set>
-
+#include <cstdlib>
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/utils/logger.hpp>
@@ -23,6 +23,7 @@
 enum {BRIGHTNESS, ROTATE, RESIZE, CROP, DILATATION, EROSION, CANNY_EDGE}; // options
 enum {IDLE, OVER, DOWN}; // imageStates
 enum {RESET, SAVE, NEW, PANORAMA, CAPTUREVIDEO}; // imageParameters
+
 
 
 class ImageApp {
@@ -43,6 +44,7 @@ private:
     std::string imageOutputPath = "../src/ressources/output";
     ImageHandler* image = nullptr;
     int option = BRIGHTNESS;
+
 
     /* **** Block Variables **** */
     // Button & grid parameters & info-bulles list
@@ -89,6 +91,7 @@ public:
     bool openStarterImage(const std::string& imagePathName);
     bool openVideo(const std::string& imagePathName);
     bool openVideo();
+    void startDefaultImage(std::vector<std::string>);
 
     // Deconstructors
     ~ImageApp();
@@ -126,17 +129,20 @@ public:
 
     // Parameters
     void saveImage();
-    void newImage();
+    void newMedia();
     void resetImage();
     void defaultValues();
 
     // Video
-    bool isVideoFile(std::string filename);
+    bool isVideoFile(const std::string& filename);
     void showVideo();
     void videoPanel();
-    bool getIsVideo();
-    bool getIsVideoRunning();
+    bool getIsVideo() const;
+    bool getIsVideoRunning() const;
     void captureVideoPanel();
+
+    // Utils
+    bool has_accents(std::string str);
 };
 
 

@@ -24,7 +24,8 @@ public:
 	std::vector<std::string> m_listImages;
 
 	// Constructeur
-	PanoramaCreator(const std::string& folderPath);
+	PanoramaCreator();
+	explicit PanoramaCreator(const std::string& folderPath);
 
 	// Getter
 	std::vector<std::string> getListImages();

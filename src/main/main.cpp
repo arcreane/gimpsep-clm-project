@@ -39,8 +39,9 @@ int main(int args, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_WARNING);
 
     // if imagePath in parameter
-    std::string imagePath = "../src/ressources/HappyFish.jpg";
-    //std::string imagePath = R"(..\\src\\ressources\\chaplin.mp4)";
+    std::string imagePath;
+    //imagePath = "../src/ressources/HappyFish.jpg";
+    //imagePath = R"(..\\src\\ressources\\chaplin.mp4)";
     if(args>1) {imagePath = argv[1];}
 
     // run the gui application
@@ -50,22 +51,26 @@ int main(int args, char** argv) {
 
 
 int run_application(const std::string& imagePathName) {
+    std::cout << "Run application" << std::endl;
     // Create the GUI application
     ImageApp myApp = ImageApp();
 
-    // if no parameter then popup select image
-    if (imagePathName.empty()) {
-        // popup
+    // if parameter
+    bool isFileOpen = false;
+    if (!imagePathName.empty()) {
+        isFileOpen = true;
+        // try loading the image
+        if (!myApp.isVideoFile(imagePathName) && !myApp.openStarterImage(imagePathName)){
+            myApp.startDefaultImage({"Error : can't open your image.","Please select a new media"});
+        }
+        // try loading the video
+        else if (myApp.isVideoFile(imagePathName) && !myApp.openVideo(imagePathName)){
+            myApp.startDefaultImage({"Error : can't open your video.","Please select a new media"});
+        }
     }
-    // load the image in the application
-    if (!myApp.isVideoFile(imagePathName) && !myApp.openStarterImage(imagePathName)){
-        std::cout << "Error : cannot open your image" << std::endl;
-        return -1; // if error open image then popup error [close or choose new image]
-    }
-    else if (myApp.isVideoFile(imagePathName) && !myApp.openVideo(imagePathName)){
-        std::cout << "Error : cannot open your video" << std::endl;
-        return -1; // if error open image then popup error [close or choose new image]
-    }
+    // if no file is openning then default image
+    if (!isFileOpen) {myApp.startDefaultImage({});}
+
 
     cvui::init(WINDOW_NAME);
     while (true) {

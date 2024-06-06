@@ -7,10 +7,26 @@ using namespace cv;
 // Define the constructors
 Image::Image(const string& imagePath)
 {
-	m_imageSource = imread(imagePath, IMREAD_COLOR);
-	if (m_imageSource.empty()) {
+    cv::Mat image = cv::imread(imagePath, cv::IMREAD_UNCHANGED);
+    if (image.empty()) {
     	cout << "Could not open or find the image" << endl;
     }
+    // Si une image a un canal alpha (transparence)
+    if (image.channels() == 4) {
+        cv::Mat tempImage;
+        cv::cvtColor(image, tempImage, cv::COLOR_BGRA2BGR);
+        for (int y = 0; y < image.rows; ++y)
+            for (int x = 0; x < image.cols; ++x) {
+                auto & pixel = image.at<cv::Vec4b>(y, x);
+                // Si le pixel est transparent,
+                if (pixel[3] == 0) {
+                    // Le remplace par du blanc
+                    tempImage.at<cv::Vec3b>(y, x) = cv::Vec3b(255, 255, 255);
+                }
+            }
+        image = tempImage.clone();
+    }
+    m_imageSource = image;
 }
 
 Image::Image(Mat& imageMat)
