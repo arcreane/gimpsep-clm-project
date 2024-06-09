@@ -6,7 +6,7 @@
 
 
 protocol main {
-    runApplication()
+    runApplication(mediaPath=None)
 }
 
 main  --> "CLM-Project"
@@ -40,7 +40,6 @@ package "CLM-Project" {
 
     class PanoramaCreation{
         +selecImages()
-        +selectFolder()
         -createPanorama()
     }
 

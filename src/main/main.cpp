@@ -27,6 +27,22 @@
 #include "ImageApp.h"
 
 
+
+
+#ifdef _WIN32
+    void hello() {std::cout << "_WIN32 detected" << std::endl;}
+#elif __linux__
+    void hello() {std::cout << "__linux__ detected" << std::endl;}
+#elif __unix__
+    void hello() {std::cout << "__unix__ detected" << std::endl;}
+#elif defined(_POSIX_VERSION)
+    void hello() {std::cout << "_POSIX_VERSION detected" << std::endl;}
+#else
+    void hello() {std::cout << "No OS detected" << std::endl;}
+#endif
+
+
+
 using namespace std;
 using namespace cv;
 
@@ -35,6 +51,7 @@ int run_application(const std::string& imagePathName);
 
 
 int main(int args, char** argv) {
+    hello();
     // Remove openCV output message
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_WARNING);
 

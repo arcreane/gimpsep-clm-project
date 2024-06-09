@@ -32,11 +32,6 @@ vector<string> PanoramaCreator::getListImages()
   * The purpose of this function is to take as parameters the name of several images, and try to stitch them together,
   * ie detecting the common part.
   *
-  * \nhttps://docs.opencv.org/2.4/modules/stitching/doc/stitching.html
-  * \nhttps://docs.opencv.org/2.4/modules/stitching/doc/introduction.html
-  * \nhttps://www.geeksforgeeks.org/stitching-input-images-panorama-using-opencv-c/
-  * \nhttps://pyimagesearch.com/2018/12/17/image-stitching-with-opencv-and-python/
-  *
   * @param m_listImages: list of the names of the images
   * @return Image
   */
