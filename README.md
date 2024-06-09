@@ -27,5 +27,5 @@ To start developing on this project, start by cloning this repository and config
 
 A "cmake-build-debug" & ".idea" folders will be generated
 
-### Linux : Notepad++
+### Linux :
 ...
