@@ -6,7 +6,7 @@ This repository contains the code of the `CLM` project.
 The project is to develop a small GIMP-like image editor, with basic functions
 The project is only made in C++.
 It's use the following library : 
-* [openCV](https://opencv.org/)
+* [openCV](https://opencv.org/) ([installation openCV + CV](https://www.youtube.com/watch?v=fjq8eTuHnMM))
 * [cvui]( https://github.com/Dovyski/cvui) 
 * [tinyfiledialogs](https://github.com/LazyJazz/tinyfiledialogs)
 
