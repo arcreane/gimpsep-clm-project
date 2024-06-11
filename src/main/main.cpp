@@ -9,49 +9,12 @@
 //     • using image manipulation
 //     • adaptability
 
-#include <iostream>
 #include <string>
-
-// installation Clion: https://www.youtube.com/watch?v=fjq8eTuHnMM
-#include <opencv2/core.hpp>
-#include <opencv2/core/utils/logger.hpp>
-//#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
-
-// One (and only one) of your C++ files must define CVUI_IMPLEMENTATION
-// before the inclusion of cvui.h to ensure its implementaiton is compiled.
-#define CVUI_IMPLEMENTATION
-#include "../lib/cvui.h"
-//#include "../lib/EnhancedWindow.h" // exemple : https://github.com/Dovyski/cvui/blob/master/example/src/ui-enhanced-window-component/main.cpp
-
+#include <opencv2/core/utils/logger.hpp> // installation Clion: https://www.youtube.com/watch?v=fjq8eTuHnMM
 #include "ImageApp.h"
 
 
-
-
-#ifdef _WIN32
-    void hello() {std::cout << "_WIN32 detected" << std::endl;}
-#elif __linux__
-    void hello() {std::cout << "__linux__ detected" << std::endl;}
-#elif __unix__
-    void hello() {std::cout << "__unix__ detected" << std::endl;}
-#elif defined(_POSIX_VERSION)
-    void hello() {std::cout << "_POSIX_VERSION detected" << std::endl;}
-#else
-    void hello() {std::cout << "No OS detected" << std::endl;}
-#endif
-
-
-
-using namespace std;
-using namespace cv;
-
-int run_application(const std::string& imagePathName);
-
-
-
 int main(int args, char** argv) {
-    hello();
     // Remove openCV output message
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_WARNING);
 
@@ -62,57 +25,6 @@ int main(int args, char** argv) {
     if(args>1) {imagePath = argv[1];}
 
     // run the gui application
-    return run_application(imagePath);
-}
-
-
-
-int run_application(const std::string& imagePathName) {
-    std::cout << "Run application" << std::endl;
-    // Create the GUI application
-    ImageApp myApp = ImageApp();
-
-    // if parameter
-    bool isFileOpen = false;
-    if (!imagePathName.empty()) {
-        isFileOpen = true;
-        // try loading the image
-        if (!myApp.isVideoFile(imagePathName) && !myApp.openStarterImage(imagePathName)){
-            myApp.startDefaultImage({"Error : can't open your image.","Please select a new media"});
-        }
-        // try loading the video
-        else if (myApp.isVideoFile(imagePathName) && !myApp.openVideo(imagePathName)){
-            myApp.startDefaultImage({"Error : can't open your video.","Please select a new media"});
-        }
-    }
-    // if no file is openning then default image
-    if (!isFileOpen) {myApp.startDefaultImage({});}
-
-
-    cvui::init(WINDOW_NAME);
-    while (true) {
-        myApp.getFrame() = cv::Scalar(49, 52, 49);
-        cv::Point cursor = cvui::mouse();
-        //---------------------------------------------------//
-        if (myApp.getIsVideo() && myApp.getIsVideoRunning()) {
-            myApp.showVideo();
-        }
-        myApp.centerBlock();
-        if (!myApp.getIsVideoRunning()) {
-            myApp.topLeftBlock();
-            myApp.bottomLeftBlock();
-        }
-        myApp.topRightBlock();
-        myApp.bottomBlock(cursor);
-
-        //---------------------------------------------------//
-        cvui::update();
-        cvui::imshow(WINDOW_NAME, myApp.getFrame());
-        char key = (char)cv::waitKey(20);
-        if (key  == 27 || cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_VISIBLE) < 1) {break;}
-        if (key  == 26) {myApp.ControlZ();}
-        if (key  == 25) {myApp.ControlY();}
-    }
-    return 0;
+    return ImageApp::run_application(imagePath);  // optional parameters
 }
 

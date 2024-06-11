@@ -93,6 +93,10 @@ public:
     bool openVideo();
     void startDefaultImage(std::vector<std::string>);
 
+    static int run_application();
+    static int run_application(const std::string& imagePathName);
+
+
     // Deconstructors
     ~ImageApp();
 

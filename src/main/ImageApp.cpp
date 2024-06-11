@@ -2,11 +2,18 @@
 // Created by charm on 19/05/2024.
 //
 
+// One (and only one) of your C++ files must define CVUI_IMPLEMENTATION
+// before the inclusion of cvui.h to ensure its implementaiton is compiled.
+
+
 #include "ImageApp.h"
 
 // https://github.com/Dovyski/cvui
 // https://fernandobevilacqua.com/cvui/components/image/
+#define CVUI_IMPLEMENTATION
 #include "../lib/cvui.h" // Cannot be put in the header file
+//#include "../lib/EnhancedWindow.h" // exemple : https://github.com/Dovyski/cvui/blob/master/example/src/ui-enhanced-window-component/main.cpp
+
 #include "../lib/tinyfiledialogs.h" // Include file dialog library
 #include <locale>
 
@@ -148,6 +155,61 @@ void ImageApp::startDefaultImage(std::vector<std::string> text) {
     this->defaultValues();
 }
 
+
+int ImageApp::run_application() {
+    std::string imagePath;
+    return ImageApp::run_application(imagePath);
+}
+
+
+int ImageApp::run_application(const std::string& imagePath) {
+    std::cout << "Run application" << std::endl;
+    // Create the GUI application
+    ImageApp myApp = ImageApp();
+
+    // if parameter
+    bool isFileOpen = false;
+    if (!imagePath.empty()) {
+        isFileOpen = true;
+        // try loading the image
+        if (!myApp.isVideoFile(imagePath) && !myApp.openStarterImage(imagePath)){
+            myApp.startDefaultImage({"Error : can't open your image.","Please select a new media"});
+        }
+            // try loading the video
+        else if (myApp.isVideoFile(imagePath) && !myApp.openVideo(imagePath)){
+            myApp.startDefaultImage({"Error : can't open your video.","Please select a new media"});
+        }
+    }
+    // if no file is openning then default image
+    if (!isFileOpen) {myApp.startDefaultImage({});}
+
+
+    cvui::init(WINDOW_NAME);
+    while (true) {
+        myApp.getFrame() = cv::Scalar(49, 52, 49);
+        cv::Point cursor = cvui::mouse();
+        //---------------------------------------------------//
+        if (myApp.getIsVideo() && myApp.getIsVideoRunning()) {
+            myApp.showVideo();
+        }
+        myApp.centerBlock();
+        if (!myApp.getIsVideoRunning()) {
+            myApp.topLeftBlock();
+            myApp.bottomLeftBlock();
+        }
+        myApp.topRightBlock();
+        myApp.bottomBlock(cursor);
+
+        //---------------------------------------------------//
+        cvui::update();
+        cvui::imshow(WINDOW_NAME, myApp.getFrame());
+        char key = (char)cv::waitKey(20);
+        if (key  == 27 || cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_VISIBLE) < 1) {break;}
+        if (key  == 26) {myApp.ControlZ();}
+        if (key  == 25) {myApp.ControlY();}
+    }
+    return 0;
+}
 
 /* ************************************************* */
 /* Deconstructors */
